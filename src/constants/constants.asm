@@ -1,0 +1,1 @@
+INCLUDE "constants/wram.asm"
