@@ -13,14 +13,12 @@ include "code/header.asm"
 section "Main", rom0[$0150]
 include "code/bank0.asm"
 
+section "bank0-data",rom0[$2dc3]
+include "data/bank0-data.asm"
+
 section "bank1-a",romx[$4000],bank[$01]
-incbin "data/bank1-a.bin"
-
-section "bank1-b",romx[$7745],bank[$01]
-incbin "data/bank1-b.bin"
-
-; Images
-section "Tileset",romx[$61b5],bank[$01]
+include "data/bank1-a.asm"
 Tileset::
 incbin "gfx/tileset.2bpp"
+include "data/bank1-b.asm"
 
