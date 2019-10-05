@@ -35,7 +35,6 @@ src/main.o: $(asm_files) $(gfx_files:.png=.2bpp) $(bin_files)
 # Generating a mapfile is required thanks to a bug in rgblink.
 soukoban.gb: $(obj)
 	rgblink -n $*.sym -m $*.map -o $@ $(obj)
-	#rgbfix -v -p 0xff $@
 	rgbfix  -n 0 -r 0 -l 0xce -m 0 -p 0xff -t "SOUKOBAN" -v $@
 	
 	md5sum -c soukoban.md5

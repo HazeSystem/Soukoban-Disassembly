@@ -1,1 +1,1 @@
-INCLUDE "constants/wram.asm"
+include "constants/wram.asm"
