@@ -11,5 +11,6 @@
 # precompiled python
 *.pyc
 
-# staging files
+# reference files
 bin/
+notes.txt

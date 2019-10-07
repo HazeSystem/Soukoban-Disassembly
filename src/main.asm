@@ -19,6 +19,6 @@ include "data/bank0-data.asm"
 section "bank1-a",romx[$4000],bank[$01]
 include "data/bank1-a.asm"
 Tileset::
-incbin "gfx/tileset.2bpp"
+incbin "gfx/tileset.2bpp"	; $61b5
 include "data/bank1-b.asm"
-
+include "data/bank1-text.asm"
