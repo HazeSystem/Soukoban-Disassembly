@@ -348,34 +348,8 @@ wC0AB:: ; C0AB
 	ds 1
 wC0AC:: ; C0AC
 	ds 1
-wC0AD:: ; C0AD
-	ds 1
-wC0AE:: ; C0AE
-	ds 1
-wC0AF:: ; C0AF
-	ds 1
-wC0B0:: ; C0B0
-	ds 1
-wC0B1:: ; C0B1
-	ds 1
-wC0B2:: ; C0B2
-	ds 1
-wC0B3:: ; C0B3
-	ds 1
-wC0B4:: ; C0B4
-	ds 1
-wC0B5:: ; C0B5
-	ds 1
-wC0B6:: ; C0B6
-	ds 1
-wC0B7:: ; C0B7
-	ds 1
-wC0B8:: ; C0B8
-	ds 1
-wC0B9:: ; C0B9
-	ds 1
-wC0BA:: ; C0BA
-	ds 1
+wVRAMBuffer:: ; C0AD
+	ds 14
 wC0BB:: ; C0BB
 	ds 1
 wC0BC:: ; C0BC
@@ -446,10 +420,8 @@ wC0DC:: ; C0DC
 	ds 1
 wC0DD:: ; C0DD
 	ds 1
-wC0DE:: ; C0DE
-	ds 1
-wC0DF:: ; C0DF
-	ds 1
+wTileMap:: ; C0DE
+	ds 2
 wC0E0:: ; C0E0
 	ds 1
 wC0E1:: ; C0E1
@@ -494,11 +466,11 @@ wC0F4:: ; C0F4
 	ds 1
 wC0F5:: ; C0F5
 	ds 1
-wC0F6:: ; C0F6
+wWaitForVBlank:: ; C0F6
 	ds 1
-wC0F7:: ; C0F7
+wVRAMPointerHigh:: ; C0F7
 	ds 1
-wC0F8:: ; C0F8
+wVRAMPointerLow:: ; C0F8
 	ds 1
 wC0F9:: ; C0F9
 	ds 1

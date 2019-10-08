@@ -43,9 +43,9 @@ Jump_000_0198::
 	ldh [rIE], a                                  ; $019d: $e0 $ff
 	xor a                                         ; $019f: $af
 	ld [wC0F2], a                                 ; $01a0: $ea $f2 $c0
-	call Call_000_212c                            ; $01a3: $cd $2c $21
+	call LCDOff                            ; $01a3: $cd $2c $21
 	ld sp, $fffe                                  ; $01a6: $31 $fe $ff	
-	call Call_000_20b5                            ; $01a9: $cd $b5 $20
+	call WriteDMACodeToHRAM                            ; $01a9: $cd $b5 $20
 	
 	ld hl, Tileset                                ; $01ac: $21 $b5 $61
 	ld de, vTiles0                                ; $01af: $11 $b0 $87
@@ -73,7 +73,7 @@ Jump_000_0198::
 
 jr_000_01e3::
 	call Call_000_2c8a                            ; $01e3: $cd $8a $2c
-	call Call_000_214c                            ; $01e6: $cd $4c $21
+	call ClearBGMap                            ; $01e6: $cd $4c $21
 	ld b, $a0                                     ; $01e9: $06 $a0
 	ld a, $00                                     ; $01eb: $3e $00
 	ld hl, wC000                                  ; $01ed: $21 $00 $c0
@@ -83,6 +83,7 @@ jr_000_01f0::
 	dec b                                         ; $01f1: $05
 	jr nz, jr_000_01f0                            ; $01f2: $20 $fc
 
+	; load palettes
 	ld a, $e4                                     ; $01f4: $3e $e4
 	ldh [rBGP], a                                 ; $01f6: $e0 $47
 	ldh [rOBP0], a                                ; $01f8: $e0 $48
@@ -259,6 +260,7 @@ InterruptVBlank::
 	and $f0                                       ; $0307: $e6 $f0
 	jr nz, jr_000_031d                            ; $0309: $20 $12
 
+; DMA routine
 	call $ff80                                    ; $030b: $cd $80 $ff
 	xor a                                         ; $030e: $af
 	ld [wC0F5], a                                 ; $030f: $ea $f5 $c0
@@ -358,7 +360,7 @@ Call_000_0384::
 	call Call_000_0572                            ; $0393: $cd $72 $05
 	ld a, [wC0DD]                                 ; $0396: $fa $dd $c0
 	ld l, a                                       ; $0399: $6f
-	ld a, [wC0DE]                                 ; $039a: $fa $de $c0
+	ld a, [wTileMap]                                 ; $039a: $fa $de $c0
 	ld h, a                                       ; $039d: $67
 	ld de, wC87A                                  ; $039e: $11 $7a $c8
 
@@ -662,7 +664,7 @@ Call_000_053d::
 	and a                                         ; $0546: $a7
 	jr z, Jump_000_054c                           ; $0547: $28 $03
 
-	jp Call_000_1be1                              ; $0549: $c3 $e1 $1b
+	jp RenderText                              ; $0549: $c3 $e1 $1b
 
 
 Jump_000_054c::
@@ -1268,7 +1270,7 @@ jr_000_08ae::
 
 Call_000_08da::
 	call Call_000_066f                            ; $08da: $cd $6f $06
-	call Call_000_20cd                            ; $08dd: $cd $cd $20
+	call CopyBGMapAddressToHRAM                            ; $08dd: $cd $cd $20
 	ld hl, wC87A                                  ; $08e0: $21 $7a $c8
 	ld a, [wC0C6]                                 ; $08e3: $fa $c6 $c0
 	ld e, a                                       ; $08e6: $5f
@@ -1281,7 +1283,7 @@ Call_000_08da::
 
 Call_000_08f4::
 	call Call_000_066f                            ; $08f4: $cd $6f $06
-	call Call_000_20cd                            ; $08f7: $cd $cd $20
+	call CopyBGMapAddressToHRAM                            ; $08f7: $cd $cd $20
 	xor a                                         ; $08fa: $af
 	ld [wC0D2], a                                 ; $08fb: $ea $d2 $c0
 	call Call_000_0a19                            ; $08fe: $cd $19 $0a
@@ -1568,7 +1570,7 @@ Call_000_0a68::
 	inc de                                        ; $0a77: $13
 	ld a, [de]                                    ; $0a78: $1a
 	ldh [$8e], a                                  ; $0a79: $e0 $8e
-	call Call_000_20cd                            ; $0a7b: $cd $cd $20
+	call CopyBGMapAddressToHRAM                            ; $0a7b: $cd $cd $20
 	ld a, $02                                     ; $0a7e: $3e $02
 	ld [wC0D3], a                                 ; $0a80: $ea $d3 $c0
 	call Call_000_049e                            ; $0a83: $cd $9e $04
@@ -2314,7 +2316,7 @@ Call_000_0e7c::
 	sub b                                         ; $0e96: $90
 	ld [wC0DD], a                                 ; $0e97: $ea $dd $c0
 	ldh a, [$8f]                                  ; $0e9a: $f0 $8f
-	ld [wC0DE], a                                 ; $0e9c: $ea $de $c0
+	ld [wTileMap], a                                 ; $0e9c: $ea $de $c0
 	ret                                           ; $0e9f: $c9
 
 
@@ -2569,7 +2571,7 @@ Call_000_1010::
 	ldh [$8e], a                                  ; $102c: $e0 $8e
 	ld [wC0AA], a                                 ; $102e: $ea $aa $c0
 	call Call_000_0b2a                            ; $1031: $cd $2a $0b
-	call Call_000_20cd                            ; $1034: $cd $cd $20
+	call CopyBGMapAddressToHRAM                            ; $1034: $cd $cd $20
 	ld a, [wC2EF]                                 ; $1037: $fa $ef $c2
 	sla a                                         ; $103a: $cb $27
 	ld e, a                                       ; $103c: $5f
@@ -2770,7 +2772,7 @@ jr_000_116b::
 	ldh [$8d], a                                  ; $1170: $e0 $8d
 	ld a, [hl]                                    ; $1172: $7e
 	ldh [$8e], a                                  ; $1173: $e0 $8e
-	call Call_000_20cd                            ; $1175: $cd $cd $20
+	call CopyBGMapAddressToHRAM                            ; $1175: $cd $cd $20
 	pop hl                                        ; $1178: $e1
 	ld a, [wC0D3]                                 ; $1179: $fa $d3 $c0
 	and a                                         ; $117c: $a7
@@ -3164,31 +3166,31 @@ Call_000_1391::
 	cp $04                                        ; $1394: $fe $04
 	ret nz                                        ; $1396: $c0
 
-	call Call_000_214c                            ; $1397: $cd $4c $21
+	call ClearBGMap                            ; $1397: $cd $4c $21
 	ld a, $44                                     ; $139a: $3e $44
-	ld [wC0F8], a                                 ; $139c: $ea $f8 $c0
+	ld [wVRAMPointerLow], a                                 ; $139c: $ea $f8 $c0
 	ld a, $98                                     ; $139f: $3e $98
-	ld [wC0F7], a                                 ; $13a1: $ea $f7 $c0
+	ld [wVRAMPointerHigh], a                                 ; $13a1: $ea $f7 $c0
 	ld a, $0e                                     ; $13a4: $3e $0e
 	ld [wC0A1], a                                 ; $13a6: $ea $a1 $c0
 	ld [wC0F3], a                                 ; $13a9: $ea $f3 $c0
 	ld hl, $4121                                  ; $13ac: $21 $21 $41
 
 jr_000_13af::
-	ld de, wC0AD                                  ; $13af: $11 $ad $c0
+	ld de, wVRAMBuffer                                  ; $13af: $11 $ad $c0
 	ld c, $0d                                     ; $13b2: $0e $0d
 	ld b, $00                                     ; $13b4: $06 $00
 	call CopyData                              ; $13b6: $cd $5b $21
 	ld a, $ff                                     ; $13b9: $3e $ff
-	ld [wC0BA], a                                 ; $13bb: $ea $ba $c0
+	ld [wVRAMBuffer+13], a                                 ; $13bb: $ea $ba $c0
 	push hl                                       ; $13be: $e5
-	ld a, [wC0F8]                                 ; $13bf: $fa $f8 $c0
+	ld a, [wVRAMPointerLow]                                 ; $13bf: $fa $f8 $c0
 	add $20                                       ; $13c2: $c6 $20
-	ld [wC0F8], a                                 ; $13c4: $ea $f8 $c0
-	ld a, [wC0F7]                                 ; $13c7: $fa $f7 $c0
+	ld [wVRAMPointerLow], a                                 ; $13c4: $ea $f8 $c0
+	ld a, [wVRAMPointerHigh]                                 ; $13c7: $fa $f7 $c0
 	adc $00                                       ; $13ca: $ce $00
-	ld [wC0F7], a                                 ; $13cc: $ea $f7 $c0
-	call Call_000_1be1                            ; $13cf: $cd $e1 $1b
+	ld [wVRAMPointerHigh], a                                 ; $13cc: $ea $f7 $c0
+	call RenderText                            ; $13cf: $cd $e1 $1b
 	pop hl                                        ; $13d2: $e1
 	ld a, [wC0A1]                                 ; $13d3: $fa $a1 $c0
 	dec a                                         ; $13d6: $3d
@@ -3258,8 +3260,8 @@ jr_000_1425::
 	call Call_000_1f34                            ; $142c: $cd $34 $1f
 	ld de, $0064                                  ; $142f: $11 $64 $00
 	call Call_000_1bc5                            ; $1432: $cd $c5 $1b
-	call Call_000_212c                            ; $1435: $cd $2c $21
-	call Call_000_214c                            ; $1438: $cd $4c $21
+	call LCDOff                            ; $1435: $cd $2c $21
+	call ClearBGMap                            ; $1438: $cd $4c $21
 	ld a, $c3                                     ; $143b: $3e $c3
 	ldh [rLCDC], a                                ; $143d: $e0 $40
 	ei                                            ; $143f: $fb
@@ -3268,8 +3270,8 @@ jr_000_1425::
 
 jr_000_1444::
 	ldh [rSCY], a                                 ; $1444: $e0 $42
-	ld hl, $7847                                  ; $1446: $21 $47 $78
-	call Call_000_1f0a                            ; $1449: $cd $0a $1f
+	ld hl, TextSpacesLong                                  ; $1446: $21 $47 $78
+	call CopyTilesToVRAM                            ; $1449: $cd $0a $1f
 	ld a, $00                                     ; $144c: $3e $00
 	call Call_000_148e                            ; $144e: $cd $8e $14
 	ld a, [wC0A2]                                 ; $1451: $fa $a2 $c0
@@ -3279,8 +3281,8 @@ jr_000_1444::
 	call jr_000_1f0d                              ; $145d: $cd $0d $1f
 	ld a, $00                                     ; $1460: $3e $00
 	call Call_000_148e                            ; $1462: $cd $8e $14
-	ld hl, $7847                                  ; $1465: $21 $47 $78
-	call Call_000_1f0a                            ; $1468: $cd $0a $1f
+	ld hl, TextSpacesLong                                  ; $1465: $21 $47 $78
+	call CopyTilesToVRAM                            ; $1468: $cd $0a $1f
 	ld a, $44                                     ; $146b: $3e $44
 	call Call_000_148e                            ; $146d: $cd $8e $14
 	ld a, [wC0A2]                                 ; $1470: $fa $a2 $c0
@@ -3300,9 +3302,9 @@ jr_000_148c::
 	jr jr_000_148c                                ; $148c: $18 $fe
 
 Call_000_148e::
-	ld [wC0F8], a                                 ; $148e: $ea $f8 $c0
+	ld [wVRAMPointerLow], a                                 ; $148e: $ea $f8 $c0
 	ld a, $9a                                     ; $1491: $3e $9a
-	ld [wC0F7], a                                 ; $1493: $ea $f7 $c0
+	ld [wVRAMPointerHigh], a                                 ; $1493: $ea $f7 $c0
 	call Jump_000_04a4                            ; $1496: $cd $a4 $04
 	call Jump_000_04a4                            ; $1499: $cd $a4 $04
 	jp Jump_000_1f4a                              ; $149c: $c3 $4a $1f
@@ -3310,7 +3312,7 @@ Call_000_148e::
 
 Call_000_149f::
 	ld a, [hl+]                                   ; $149f: $2a
-	ld de, wC0AD                                  ; $14a0: $11 $ad $c0
+	ld de, wVRAMBuffer                                  ; $14a0: $11 $ad $c0
 	add e                                         ; $14a3: $83
 	ld e, a                                       ; $14a4: $5f
 	ld a, $00                                     ; $14a5: $3e $00
@@ -4137,11 +4139,11 @@ Jump_000_18cf::
 	ld a, $0c                                     ; $18e7: $3e $0c
 	ld [wC384], a                                 ; $18e9: $ea $84 $c3
 	ld hl, $7837                                  ; $18ec: $21 $37 $78
-	call Call_000_1f0a                            ; $18ef: $cd $0a $1f
+	call CopyTilesToVRAM                            ; $18ef: $cd $0a $1f
 	ld a, $ff                                     ; $18f2: $3e $ff
 	ld [wGameplayType], a                         ; $18f4: $ea $ec $c2
 	ld hl, $98a2                                  ; $18f7: $21 $a2 $98
-	call $1ef9                                    ; $18fa: $cd $f9 $1e
+	call Call_000_1ef9                                    ; $18fa: $cd $f9 $1e
 	ld a, $05                                     ; $18fd: $3e $05
 	ld [wGameplayType], a                         ; $18ff: $ea $ec $c2
 	jp jr_000_1a64                                ; $1902: $c3 $64 $1a
@@ -4261,17 +4263,17 @@ Jump_000_19b4::
 	pop bc                                        ; $19c5: $c1
 
 Jump_000_19c6::
-	ld hl, $7850                                  ; $19c6: $21 $50 $78
-	call Call_000_1f0a                            ; $19c9: $cd $0a $1f
+	ld hl, TextSpacesShort                                  ; $19c6: $21 $50 $78
+	call CopyTilesToVRAM                            ; $19c9: $cd $0a $1f
 	ld a, $ff                                     ; $19cc: $3e $ff
 	ld [wGameplayType], a                         ; $19ce: $ea $ec $c2
 	ld [de], a                                    ; $19d1: $12
 	ld hl, $9865                                  ; $19d2: $21 $65 $98
-	call $1ef9                                    ; $19d5: $cd $f9 $1e
-	ld hl, $784c                                  ; $19d8: $21 $4c $78
-	call Call_000_1f0a                            ; $19db: $cd $0a $1f
+	call Call_000_1ef9                                    ; $19d5: $cd $f9 $1e
+	ld hl, TextSpacesMed                                  ; $19d8: $21 $4c $78
+	call CopyTilesToVRAM                            ; $19db: $cd $0a $1f
 	ld hl, $98a2                                  ; $19de: $21 $a2 $98
-	call $1ef9                                    ; $19e1: $cd $f9 $1e
+	call Call_000_1ef9                                    ; $19e1: $cd $f9 $1e
 	ld a, $05                                     ; $19e4: $3e $05
 	ld [wGameplayType], a                         ; $19e6: $ea $ec $c2
 	xor a                                         ; $19e9: $af
@@ -4527,7 +4529,7 @@ jr_000_1b85::
 	dec b                                         ; $1b86: $05
 	jr nz, jr_000_1b85                            ; $1b87: $20 $fc
 
-	ld de, $7825                                  ; $1b89: $11 $25 $78
+	ld de, Text0d                                  ; $1b89: $11 $25 $78
 	ld hl, $9821                                  ; $1b8c: $21 $21 $98
 	call Jump_000_1bec                            ; $1b8f: $cd $ec $1b
 	ld a, $05                                     ; $1b92: $3e $05
@@ -4584,30 +4586,30 @@ Call_000_1bdb::
 	and $f0                                       ; $1bde: $e6 $f0
 	ret z                                         ; $1be0: $c8
 
-Call_000_1be1::
-	ld de, wC0AD                                  ; $1be1: $11 $ad $c0
-	ld a, [wC0F7]                                 ; $1be4: $fa $f7 $c0
+RenderText::
+	ld de, wVRAMBuffer                            ; $1be1: $11 $ad $c0
+	ld a, [wVRAMPointerHigh]                                 ; $1be4: $fa $f7 $c0
 	ld h, a                                       ; $1be7: $67
-	ld a, [wC0F8]                                 ; $1be8: $fa $f8 $c0
+	ld a, [wVRAMPointerLow]                                 ; $1be8: $fa $f8 $c0
 	ld l, a                                       ; $1beb: $6f
 
 Jump_000_1bec::
 	ld a, [de]                                    ; $1bec: $1a
 	cp $ff                                        ; $1bed: $fe $ff
-	jr z, jr_000_1bf9                             ; $1bef: $28 $08
+	jr z, .continue                             ; $1bef: $28 $08
 
-jr_000_1bf1::
+.loop
 	ld [hl], a                                    ; $1bf1: $77
 	cp [hl]                                       ; $1bf2: $be
-	jr nz, jr_000_1bf1                            ; $1bf3: $20 $fc
+	jr nz, .loop                            ; $1bf3: $20 $fc
 
 	inc hl                                        ; $1bf5: $23
 	inc de                                        ; $1bf6: $13
 	jr Jump_000_1bec                              ; $1bf7: $18 $f3
 
-jr_000_1bf9::
+.continue
 	xor a                                         ; $1bf9: $af
-	ld [wC0F6], a                                 ; $1bfa: $ea $f6 $c0
+	ld [wWaitForVBlank], a                                 ; $1bfa: $ea $f6 $c0
 	ret                                           ; $1bfd: $c9
 
 
@@ -4648,12 +4650,12 @@ jr_000_1c1f::
 	ld [wC132], a                                 ; $1c3a: $ea $32 $c1
 
 jr_000_1c3d::
-	ld hl, $7850                                  ; $1c3d: $21 $50 $78
-	call Call_000_1f0a                            ; $1c40: $cd $0a $1f
+	ld hl, TextSpacesShort                                  ; $1c3d: $21 $50 $78
+	call CopyTilesToVRAM                            ; $1c40: $cd $0a $1f
 	ld a, [wC132]                                 ; $1c43: $fa $32 $c1
 	ld hl, $1c92                                  ; $1c46: $21 $92 $1c
 	call Call_000_0e7c                            ; $1c49: $cd $7c $0e
-	call $1ef9                                    ; $1c4c: $cd $f9 $1e
+	call Call_000_1ef9                                    ; $1c4c: $cd $f9 $1e
 	ld a, [wC132]                                 ; $1c4f: $fa $32 $c1
 	dec a                                         ; $1c52: $3d
 	ld [wC132], a                                 ; $1c53: $ea $32 $c1
@@ -4664,9 +4666,9 @@ Jump_000_1c58::
 	cp $03                                        ; $1c5b: $fe $03
 	jr z, jr_000_1c9c                             ; $1c5d: $28 $3d
 
-	ld hl, $7850                                  ; $1c5f: $21 $50 $78
-	call Call_000_1f0a                            ; $1c62: $cd $0a $1f
-	ld hl, $7745                                  ; $1c65: $21 $45 $77
+	ld hl, TextSpacesShort                        ; $1c5f: $21 $50 $78
+	call CopyTilesToVRAM                          ; $1c62: $cd $0a $1f
+	ld hl, TextTable                              ; $1c65: $21 $45 $77
 	ld a, [wGameplayType]                         ; $1c68: $fa $ec $c2
 	and $f0                                       ; $1c6b: $e6 $f0
 	swap a                                        ; $1c6d: $cb $37
@@ -4674,27 +4676,18 @@ Jump_000_1c58::
 	call Call_000_0e7c                            ; $1c70: $cd $7c $0e
 	ld a, [wC0F9]                                 ; $1c73: $fa $f9 $c0
 	call Call_000_0e7c                            ; $1c76: $cd $7c $0e
-	call Call_000_1f0a                            ; $1c79: $cd $0a $1f
+	call CopyTilesToVRAM                            ; $1c79: $cd $0a $1f
 	ld a, [wC0F9]                                 ; $1c7c: $fa $f9 $c0
 	ld hl, $1c92                                  ; $1c7f: $21 $92 $1c
 	call Call_000_0e7c                            ; $1c82: $cd $7c $0e
-	call $1ef9                                    ; $1c85: $cd $f9 $1e
+	call Call_000_1ef9                                    ; $1c85: $cd $f9 $1e
 	ld a, [wC0F9]                                 ; $1c88: $fa $f9 $c0
 	inc a                                         ; $1c8b: $3c
 	ld [wC0F9], a                                 ; $1c8c: $ea $f9 $c0
 	jp Jump_000_1c58                              ; $1c8f: $c3 $58 $1c
 
 
-	ld b, d                                       ; $1c92: $42
-	sbc h                                         ; $1c93: $9c
-	and e                                         ; $1c94: $a3
-	sbc h                                         ; $1c95: $9c
-	db $e3                                        ; $1c96: $e3
-	sbc h                                         ; $1c97: $9c
-	ld [bc], a                                    ; $1c98: $02
-	sbc l                                         ; $1c99: $9d
-	ld [hl+], a                                   ; $1c9a: $22
-	sbc l                                         ; $1c9b: $9d
+	db $42,$9C,$A3,$9C,$E3,$9C,$02,$9D,$22,$9D	  ; $1c92
 
 jr_000_1c9c::
 	ld a, [wC2EE]                                 ; $1c9c: $fa $ee $c2
@@ -4710,22 +4703,22 @@ jr_000_1c9c::
 
 jr_000_1cae::
 	ld hl, $785c                                  ; $1cae: $21 $5c $78
-	call Call_000_1f0a                            ; $1cb1: $cd $0a $1f
+	call CopyTilesToVRAM                            ; $1cb1: $cd $0a $1f
 	ld hl, $9d21                                  ; $1cb4: $21 $21 $9d
-	call $1ef9                                    ; $1cb7: $cd $f9 $1e
+	call Call_000_1ef9                                    ; $1cb7: $cd $f9 $1e
 	ld a, [wC120]                                 ; $1cba: $fa $20 $c1
-	ld [wC0AD], a                                 ; $1cbd: $ea $ad $c0
+	ld [wVRAMBuffer], a                                 ; $1cbd: $ea $ad $c0
 	ld a, [wC121]                                 ; $1cc0: $fa $21 $c1
-	ld [wC0AE], a                                 ; $1cc3: $ea $ae $c0
+	ld [wVRAMBuffer+1], a                                 ; $1cc3: $ea $ae $c0
 	ld a, [wC122]                                 ; $1cc6: $fa $22 $c1
-	ld [wC0AF], a                                 ; $1cc9: $ea $af $c0
+	ld [wVRAMBuffer+2], a                                 ; $1cc9: $ea $af $c0
 	call Call_000_1b28                            ; $1ccc: $cd $28 $1b
 	ld a, b                                       ; $1ccf: $78
-	ld [wC0B0], a                                 ; $1cd0: $ea $b0 $c0
+	ld [wVRAMBuffer+3], a                                 ; $1cd0: $ea $b0 $c0
 	ld a, $ff                                     ; $1cd3: $3e $ff
-	ld [wC0B1], a                                 ; $1cd5: $ea $b1 $c0
+	ld [wVRAMBuffer+4], a                                 ; $1cd5: $ea $b1 $c0
 	ld hl, $9d29                                  ; $1cd8: $21 $29 $9d
-	call $1ef9                                    ; $1cdb: $cd $f9 $1e
+	call Call_000_1ef9                                    ; $1cdb: $cd $f9 $1e
 	jr jr_000_1cf9                                ; $1cde: $18 $19
 
 Jump_000_1ce0::
@@ -4733,12 +4726,12 @@ Jump_000_1ce0::
 	cp $60                                        ; $1ce3: $fe $60
 	jr nz, jr_000_1cf9                            ; $1ce5: $20 $12
 
-	ld hl, $7850                                  ; $1ce7: $21 $50 $78
-	call Call_000_1f0a                            ; $1cea: $cd $0a $1f
+	ld hl, TextSpacesShort                                  ; $1ce7: $21 $50 $78
+	call CopyTilesToVRAM                            ; $1cea: $cd $0a $1f
 	ld hl, $7822                                  ; $1ced: $21 $22 $78
-	call Call_000_1f0a                            ; $1cf0: $cd $0a $1f
+	call CopyTilesToVRAM                            ; $1cf0: $cd $0a $1f
 	ld hl, $9d03                                  ; $1cf3: $21 $03 $9d
-	call $1ef9                                    ; $1cf6: $cd $f9 $1e
+	call Call_000_1ef9                                    ; $1cf6: $cd $f9 $1e
 
 jr_000_1cf9::
 	ld de, $2838                                  ; $1cf9: $11 $38 $28
@@ -4854,7 +4847,6 @@ jr_000_1db0::
 	ldh a, [$8b]                                  ; $1db0: $f0 $8b
 	ld [wC0FD], a                                 ; $1db2: $ea $fd $c0
 	ret                                           ; $1db5: $c9
-
 
 	ld a, [wC0FC]                                 ; $1db6: $fa $fc $c0
 	and a                                         ; $1db9: $a7
@@ -5035,32 +5027,24 @@ jr_000_1ed6::
 	ld [wC2D7], a                                 ; $1ee0: $ea $d7 $c2
 	ld [wC2D8], a                                 ; $1ee3: $ea $d8 $c2
 	jp Jump_000_1d98                              ; $1ee6: $c3 $98 $1d
+	
 
-
-	jp hl                                         ; $1ee9: $e9
-
-
-	ld e, $b6                                     ; $1eea: $1e $b6
-	dec e                                         ; $1eec: $1d
-	rst $20                                       ; $1eed: $e7
-	dec e                                         ; $1eee: $1d
-	ld [de], a                                    ; $1eef: $12
-	ld e, $28                                     ; $1ef0: $1e $28
-	ld e, $8c                                     ; $1ef2: $1e $8c
-	ld e, $a4                                     ; $1ef4: $1e $a4
-	ld e, $c1                                     ; $1ef6: $1e $c1
-	ld e, $7c                                     ; $1ef8: $1e $7c
-	ld [wC0F7], a                                 ; $1efa: $ea $f7 $c0
+	db $E9,$1E,$B6,$1D,$E7,$1D,$12,$1E			  ; $1ee9: $e9
+	db $28,$1E,$8C,$1E,$A4,$1E,$C1,$1E 
+	
+Call_000_1ef9
+	ld a, h										  ; $1ef9: $7c
+	ld [wVRAMPointerHigh], a                                 ; $1efa: $ea $f7 $c0
 	ld a, l                                       ; $1efd: $7d
-	ld [wC0F8], a                                 ; $1efe: $ea $f8 $c0
-	call Call_000_1f17                            ; $1f01: $cd $17 $1f
+	ld [wVRAMPointerLow], a                                 ; $1efe: $ea $f8 $c0
+	call CopyTextToBuffer                            ; $1f01: $cd $17 $1f
 	ld a, $ff                                     ; $1f04: $3e $ff
-	ld [wC0AD], a                                 ; $1f06: $ea $ad $c0
+	ld [wVRAMBuffer], a                                 ; $1f06: $ea $ad $c0
 	ret                                           ; $1f09: $c9
 
 
-Call_000_1f0a::
-	ld de, wC0AD                                  ; $1f0a: $11 $ad $c0
+CopyTilesToVRAM::
+	ld de, wVRAMBuffer                                  ; $1f0a: $11 $ad $c0
 
 jr_000_1f0d::
 	ld a, [hl+]                                   ; $1f0d: $2a
@@ -5075,14 +5059,14 @@ jr_000_1f16::
 	ret                                           ; $1f16: $c9
 
 
-Call_000_1f17::
+CopyTextToBuffer::
 	ld a, $01                                     ; $1f17: $3e $01
-	ld [wC0F6], a                                 ; $1f19: $ea $f6 $c0
+	ld [wWaitForVBlank], a                                ; $1f19: $ea $f6 $c0
 
-jr_000_1f1c::
-	ld a, [wC0F6]                                 ; $1f1c: $fa $f6 $c0
+.loop
+	ld a, [wWaitForVBlank]                                 ; $1f1c: $fa $f6 $c0
 	and a                                         ; $1f1f: $a7
-	jr nz, jr_000_1f1c                            ; $1f20: $20 $fa
+	jr nz, .loop	                              ; $1f20: $20 $fa
 
 	ret                                           ; $1f22: $c9
 
@@ -5110,23 +5094,23 @@ jr_000_1f3a::
 	or c                                          ; $1f3f: $b1
 	jr nz, jr_000_1f3a                            ; $1f40: $20 $f8
 
-	call Call_000_1f58                            ; $1f42: $cd $58 $1f
+	call DrawPauseMenuTextbox                            ; $1f42: $cd $58 $1f
 	ld a, $01                                     ; $1f45: $3e $01
 	ld [wC0FD], a                                 ; $1f47: $ea $fd $c0
 
 Jump_000_1f4a::
 	ld a, $9e                                     ; $1f4a: $3e $9e
 	ldh [$8f], a                                  ; $1f4c: $e0 $8f
-	ld [wC0F7], a                                 ; $1f4e: $ea $f7 $c0
+	ld [wVRAMPointerHigh], a                                 ; $1f4e: $ea $f7 $c0
 	xor a                                         ; $1f51: $af
 	ldh [$90], a                                  ; $1f52: $e0 $90
-	ld [wC0F8], a                                 ; $1f54: $ea $f8 $c0
+	ld [wVRAMPointerLow], a                                 ; $1f54: $ea $f8 $c0
 	ret                                           ; $1f57: $c9
 
 
-Call_000_1f58::
-	ld hl, $9c00                                  ; $1f58: $21 $00 $9c
-	ld de, $777d                                  ; $1f5b: $11 $7d $77
+DrawPauseMenuTextbox::
+	ld hl, vBGMap1                                ; $1f58: $21 $00 $9c
+	ld de, PauseMenuTextboxTop                                  ; $1f5b: $11 $7d $77
 	call Jump_000_1bec                            ; $1f5e: $cd $ec $1b
 	ld b, $09                                     ; $1f61: $06 $09
 
@@ -5137,14 +5121,14 @@ jr_000_1f63::
 	ld a, h                                       ; $1f67: $7c
 	adc $00                                       ; $1f68: $ce $00
 	ld h, a                                       ; $1f6a: $67
-	ld de, $778d                                  ; $1f6b: $11 $8d $77
+	ld de, PauseMenuTextboxSides                  ; $1f6b: $11 $8d $77
 	call Jump_000_1bec                            ; $1f6e: $cd $ec $1b
 	dec b                                         ; $1f71: $05
 	jr nz, jr_000_1f63                            ; $1f72: $20 $ef
 
 	ld bc, $0011                                  ; $1f74: $01 $11 $00
 	add hl, bc                                    ; $1f77: $09
-	ld de, $779d                                  ; $1f78: $11 $9d $77
+	ld de, PauseMenuTextboxBottom                                  ; $1f78: $11 $9d $77
 	jp Jump_000_1bec                              ; $1f7b: $c3 $ec $1b
 
 
@@ -5334,21 +5318,21 @@ Call_000_2084::
 	ret                                           ; $20b4: $c9
 
 
-Call_000_20b5::
+WriteDMACodeToHRAM::
 	ld c, $80                                     ; $20b5: $0e $80
-	ld b, $0a                                     ; $20b7: $06 $0a
-	ld hl, $20c3                                  ; $20b9: $21 $c3 $20
+	ld b, DMARoutineEnd - DMARoutine                                    ; $20b7: $06 $0a
+	ld hl, DMARoutine                                  ; $20b9: $21 $c3 $20
 
-jr_000_20bc::
+.copy
 	ld a, [hl+]                                   ; $20bc: $2a
 	ld [c], a                                     ; $20bd: $e2
 	inc c                                         ; $20be: $0c
 	dec b                                         ; $20bf: $05
-	jr nz, jr_000_20bc                            ; $20c0: $20 $fa
+	jr nz, .copy                            ; $20c0: $20 $fa
 
 	ret                                           ; $20c2: $c9
 
-
+DMARoutine:
 	ld a, $c0                                     ; $20c3: $3e $c0
 	ldh [rDMA], a                                 ; $20c5: $e0 $46
 	ld a, $28                                     ; $20c7: $3e $28
@@ -5358,9 +5342,9 @@ jr_000_20c9::
 	jr nz, jr_000_20c9                            ; $20ca: $20 $fd
 
 	ret                                           ; $20cc: $c9
+DMARoutineEnd:
 
-
-Call_000_20cd::
+CopyBGMapAddressToHRAM::
 	ldh a, [$8d]                                  ; $20cd: $f0 $8d
 	sub $10                                       ; $20cf: $d6 $10
 	srl a                                         ; $20d1: $cb $3f
@@ -5368,7 +5352,7 @@ Call_000_20cd::
 	srl a                                         ; $20d5: $cb $3f
 	ld de, $0000                                  ; $20d7: $11 $00 $00
 	ld e, a                                       ; $20da: $5f
-	ld hl, vBGMap                                 ; $20db: $21 $00 $98
+	ld hl, vBGMap0                                 ; $20db: $21 $00 $98
 	ld b, $20                                     ; $20de: $06 $20
 
 jr_000_20e0::
@@ -5434,23 +5418,23 @@ TableJump::
 	pop hl                                        ; $212a: $e1
 	jp hl                                         ; $212b: $e9
 
+; turn off LCD at next VBlank
+LCDOff::
+	ldh a, [rIE]
+	ldh [$92], a                                  ; Save interrupts configuration
+	res 0, a
 
-Call_000_212c::
-	ldh a, [rIE]                                  ; $212c: $f0 $ff
-	ldh [$92], a                                  ; $212e: $e0 $92
-	res 0, a                                      ; $2130: $cb $87
+.waitForEndOfLine
+	ldh a, [rLY]
+	cp $91
+	jr nz, .waitForEndOfLine                      ; Wait for row 145
 
-jr_000_2132::
-	ldh a, [rLY]                                  ; $2132: $f0 $44
-	cp $91                                        ; $2134: $fe $91
-	jr nz, jr_000_2132                            ; $2136: $20 $fa
-
-	ldh a, [rLCDC]                                ; $2138: $f0 $40
-	and $7f                                       ; $213a: $e6 $7f
-	ldh [rLCDC], a                                ; $213c: $e0 $40
-	ldh a, [$92]                                  ; $213e: $f0 $92
-	ldh [rIE], a                                  ; $2140: $e0 $ff
-	ret                                           ; $2142: $c9
+	ldh a, [rLCDC]                                ; \
+	and $7f                                       ; | Switch off LCD screen
+	ldh [rLCDC], a                                ; /
+	ldh a, [$92]
+	ldh [rIE], a                                  ; Restore interrupts configuration
+	ret
 
 
 Call_000_2143::
@@ -5462,18 +5446,18 @@ Call_000_2143::
 	jr nz, Call_000_2143                          ; $2149: $20 $f8
 	ret                                           ; $214b: $c9
 
-
-Call_000_214c::
+; fill the background map with $d4
+ClearBGMap::
 	ld hl, $9bff                                  ; $214c: $21 $ff $9b
 	ld bc, $0400                                  ; $214f: $01 $00 $04
 
-jr_000_2152::
+.loop
 	ld a, $d4                                     ; $2152: $3e $d4
 	ld [hl-], a                                   ; $2154: $32
 	dec bc                                        ; $2155: $0b
 	ld a, b                                       ; $2156: $78
 	or c                                          ; $2157: $b1
-	jr nz, jr_000_2152                            ; $2158: $20 $f8
+	jr nz, .loop             		              ; $2158: $20 $f8
 	ret                                           ; $215a: $c9
 
 
@@ -7334,8 +7318,8 @@ Jump_000_2ba6::
 
 
 Call_000_2bba::
-	ld hl, $7850                                  ; $2bba: $21 $50 $78
-	call Call_000_1f0a                            ; $2bbd: $cd $0a $1f
+	ld hl, TextSpacesShort                                  ; $2bba: $21 $50 $78
+	call CopyTilesToVRAM                            ; $2bbd: $cd $0a $1f
 	ld hl, $78e5                                  ; $2bc0: $21 $e5 $78
 	ld a, [wC120]                                 ; $2bc3: $fa $20 $c1
 	call Call_000_0e7c                            ; $2bc6: $cd $7c $0e
@@ -7344,7 +7328,7 @@ Call_000_2bba::
 	ld hl, $9905                                  ; $2bcf: $21 $05 $99
 	ld a, $f0                                     ; $2bd2: $3e $f0
 	ld [wGameplayType], a                         ; $2bd4: $ea $ec $c2
-	call $1ef9                                    ; $2bd7: $cd $f9 $1e
+	call Call_000_1ef9                                    ; $2bd7: $cd $f9 $1e
 	ld a, $06                                     ; $2bda: $3e $06
 	ld [wGameplayType], a                         ; $2bdc: $ea $ec $c2
 	call Call_000_2c04                            ; $2bdf: $cd $04 $2c
@@ -7492,29 +7476,29 @@ Call_000_2cbd::
 	cp $08                                        ; $2cc0: $fe $08
 	ret nz                                        ; $2cc2: $c0
 
-	call Call_000_214c                            ; $2cc3: $cd $4c $21
+	call ClearBGMap                            ; $2cc3: $cd $4c $21
 	ld a, $02                                     ; $2cc6: $3e $02
 	ld [wC2F7], a                                 ; $2cc8: $ea $f7 $c2
 	ld a, $98                                     ; $2ccb: $3e $98
-	ld [wC0F7], a                                 ; $2ccd: $ea $f7 $c0
+	ld [wVRAMPointerHigh], a                                 ; $2ccd: $ea $f7 $c0
 	ld a, $80                                     ; $2cd0: $3e $80
-	ld [wC0F8], a                                 ; $2cd2: $ea $f8 $c0
-	ld hl, $7847                                  ; $2cd5: $21 $47 $78
-	call Call_000_1f0a                            ; $2cd8: $cd $0a $1f
+	ld [wVRAMPointerLow], a                                 ; $2cd2: $ea $f8 $c0
+	ld hl, TextSpacesLong                                  ; $2cd5: $21 $47 $78
+	call CopyTilesToVRAM                            ; $2cd8: $cd $0a $1f
 	ld hl, $2dd3                                  ; $2cdb: $21 $d3 $2d
 	call Call_000_149f                            ; $2cde: $cd $9f $14
 	call jr_000_1f0d                              ; $2ce1: $cd $0d $1f
-	call Call_000_1be1                            ; $2ce4: $cd $e1 $1b
+	call RenderText                            ; $2ce4: $cd $e1 $1b
 	ld a, $00                                     ; $2ce7: $3e $00
-	ld [wC0F8], a                                 ; $2ce9: $ea $f8 $c0
+	ld [wVRAMPointerLow], a                                 ; $2ce9: $ea $f8 $c0
 	ld a, $99                                     ; $2cec: $3e $99
-	ld [wC0F7], a                                 ; $2cee: $ea $f7 $c0
-	ld hl, $7847                                  ; $2cf1: $21 $47 $78
-	call Call_000_1f0a                            ; $2cf4: $cd $0a $1f
+	ld [wVRAMPointerHigh], a                                 ; $2cee: $ea $f7 $c0
+	ld hl, TextSpacesLong                                  ; $2cf1: $21 $47 $78
+	call CopyTilesToVRAM                            ; $2cf4: $cd $0a $1f
 	ld hl, $2dec                                  ; $2cf7: $21 $ec $2d
 	call Call_000_149f                            ; $2cfa: $cd $9f $14
 	call jr_000_1f0d                              ; $2cfd: $cd $0d $1f
-	call Call_000_1be1                            ; $2d00: $cd $e1 $1b
+	call RenderText                            ; $2d00: $cd $e1 $1b
 	ld hl, wC032                                  ; $2d03: $21 $32 $c0
 	ld a, $d4                                     ; $2d06: $3e $d4
 
@@ -7558,8 +7542,8 @@ jr_000_2d3f::
 	ld [wC2F7], a                                 ; $2d3f: $ea $f7 $c2
 	ld a, $f0                                     ; $2d42: $3e $f0
 	ld [wGameplayType], a                         ; $2d44: $ea $ec $c2
-	ld hl, $7847                                  ; $2d47: $21 $47 $78
-	call Call_000_1f0a                            ; $2d4a: $cd $0a $1f
+	ld hl, TextSpacesLong                                  ; $2d47: $21 $47 $78
+	call CopyTilesToVRAM                            ; $2d4a: $cd $0a $1f
 	ld hl, $9900                                  ; $2d4d: $21 $00 $99
 	call Call_000_2db7                            ; $2d50: $cd $b7 $2d
 	ld hl, $2dc3                                  ; $2d53: $21 $c3 $2d
@@ -7622,8 +7606,8 @@ jr_000_2dad::
 
 Call_000_2db7::
 	ld a, h                                       ; $2db7: $7c
-	ld [wC0F7], a                                 ; $2db8: $ea $f7 $c0
+	ld [wVRAMPointerHigh], a                                 ; $2db8: $ea $f7 $c0
 	ld a, l                                       ; $2dbb: $7d
-	ld [wC0F8], a                                 ; $2dbc: $ea $f8 $c0
-	call Call_000_1f17                            ; $2dbf: $cd $17 $1f
+	ld [wVRAMPointerLow], a                                 ; $2dbc: $ea $f8 $c0
+	call CopyTextToBuffer                            ; $2dbf: $cd $17 $1f
 	ret                                           ; $2dc2: $c9
