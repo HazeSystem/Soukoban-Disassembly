@@ -394,7 +394,7 @@ wC0CF:: ; C0CF
 	ds 1
 wC0D0:: ; C0D0
 	ds 1
-wC0D1:: ; C0D1
+wTileSize:: ; C0D1 - Size of tile to draw, value should be 8 or 16
 	ds 1
 wC0D2:: ; C0D2
 	ds 1
@@ -480,7 +480,7 @@ wC0FB:: ; C0FB
 	ds 1
 wC0FC:: ; C0FC
 	ds 1
-wC0FD:: ; C0FD
+wKeyState:: ; C0FD - A copy of the pressed keys
 	ds 1
 wC0FE:: ; C0FE
 	ds 1
@@ -1470,7 +1470,7 @@ wC2EA:: ; C2EA
 	ds 1
 wC2EB:: ; C2EB
 	ds 1
-wGameplayType:: ; C2EC
+wGameplayType:: ; C2EC - $01 = sample play, $04 = title screen
 	ds 1
 wC2ED:: ; C2ED
 	ds 1
