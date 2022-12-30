@@ -3,8 +3,8 @@
 ; https://github.com/mattcurrie/mgbdis
 
 Start::
-	ld a, $04                                     ; $0150: $3e $04
-	ld [wGameplayType], a                         ; $0152: $ea $ec $c2
+	ld a, G_TITLE                                 ; Start off at title screen
+	ld [wGameplayType], a                         ; 
 	ld a, $06                                     ; $0155: $3e $06
 	ld [wGameplaySubtype], a                      ; $0157: $ea $f0 $c2
 	ld hl, $411a                                  ; $015a: $21 $1a $41
@@ -12,10 +12,10 @@ Start::
 	ld bc, $0007                                  ; $0160: $01 $07 $00
 	call CopyData                                 ; $0163: $cd $5b $21
 	call Call_000_217c                            ; $0166: $cd $7c $21
-	ld a, $03                                     ; $0169: $3e $03
-	ldh [rTAC], a                                 ; $016b: $e0 $07
-	ld a, $07                                     ; $016d: $3e $07
-	ldh [rTAC], a                                 ; $016f: $e0 $07
+	ld a, TACF_16KHZ                              ; Set timer to 16khz
+	ldh [rTAC], a                                 ; 
+	ld a, TACF_START + TACF_16KHZ                 ; Start timer
+	ldh [rTAC], a                                 ; 
 	ld a, $02                                     ; $0171: $3e $02
 	ld [wC385], a                                 ; $0173: $ea $85 $c3
 	xor a                                         ; $0176: $af
@@ -28,21 +28,20 @@ Start::
 	call Call_000_1793                            ; $0188: $cd $93 $17
 	ld b, $03                                     ; $018b: $06 $03
 	ld hl, wC38C                                  ; $018d: $21 $8c $c3
-
-jr_000_0190::
+.loop::                                               ; Load $00, $9B 3 times at $C38C
 	xor a                                         ; $0190: $af
 	ld [hl+], a                                   ; $0191: $22
 	ld a, $9b                                     ; $0192: $3e $9b
 	ld [hl+], a                                   ; $0194: $22
 	dec b                                         ; $0195: $05
-	jr nz, jr_000_0190                            ; $0196: $20 $f8
+	 jr nz, .loop                                 ; $0196: $20 $f8
 
 Jump_000_0198::
 	call Call_000_0c0d                            ; $0198: $cd $0d $0c
 	ld a, IEF_TIMER                               ; 
 	ldh [rIE], a                                  ; Enable timer interrupts
 	xor a                                         ; 
-	ld [wTimerSeconds], a                         ; Clear out timer
+	ld [wTimerSeconds], a                         ; Clear out game's timer
 	call LCDOff                                   ; $01a3: $cd $2c $21
 	ld sp, $fffe                                  ; $01a6: $31 $fe $ff	
 	call WriteDMACodeToHRAM                            ; $01a9: $cd $b5 $20
@@ -64,7 +63,7 @@ Jump_000_0198::
 	
 	ld a, [wGameplayType]                         ; $01d0: $fa $ec $c2
 	cp $04                                        ; $01d3: $fe $04
-	jr nz, jr_000_01e3                            ; $01d5: $20 $0c
+	 jr nz, jr_000_01e3                           ; $01d5: $20 $0c
 
 	ld hl, $6d55                                  ; $01d7: $21 $55 $6d
 	ld de, $8800                                  ; Second Tile Pattern Table in VRAM ($8800 - $97FF)
@@ -190,28 +189,23 @@ jr_000_02a3::
 
 TitleScreen::
 	call Call_000_13de                            ; $02a8: $cd $de $13
-	ld a, [wC0A3]                                 ; $02ab: $fa $a3 $c0
+	ld a, [wHasWon]                                 ; $02ab: $fa $a3 $c0
 	and a                                         ; $02ae: $a7
-	jr nz, AwaitVBlank                            ; $02af: $20 $43
+	 jr nz, AwaitVBlank                           ; $02af: $20 $43
 
-	ldh a, [hKeys]                                  ; $02b1: $f0 $8b
-	cp $08                                        ; $02b3: $fe $08
-	jr nz, jr_000_02c4                            ; $02b5: $20 $0d
-
-	ld a, $10                                     ; $02b7: $3e $10
-	ld [wGameplayType], a                         ; $02b9: $ea $ec $c2
-	ld a, $08                                     ; $02bc: $3e $08
-	ld [wC384], a                                 ; $02be: $ea $84 $c3
-	jp Jump_000_0198                              ; $02c1: $c3 $98 $01
-
-
-jr_000_02c4::
-	ldh a, [hKeys]                                  ; $02c4: $f0 $8b
-	cp $47                                        ; $02c6: $fe $47
-	jr nz, jr_000_02d8                            ; $02c8: $20 $0e
-
-	ld [wC0A3], a                                 ; $02ca: $ea $a3 $c0
-
+	ldh a, [hKeys]                                ; Check if start was pressed
+	cp K_START                                    ; 
+	 jr nz, .checkCreditKeys                      ; 
+	    ld a, $10                                 ; $02b7: $3e $10
+	    ld [wGameplayType], a                     ; $02b9: $ea $ec $c2
+	    ld a, $08                                 ; $02bc: $3e $08
+	    ld [wC384], a                             ; $02be: $ea $84 $c3
+	    jp Jump_000_0198                          ; $02c1: $c3 $98 $01
+.checkCreditKeys::
+	ldh a, [hKeys]                                ; Check for "secret" keypress
+	cp K_A + K_B + K_SELECT + K_UP                ; A + B + Select + Up
+	 jr nz, jr_000_02d8                           ; $02c8: $20 $0e
+	ld [wHasWon], a                                 ; $02ca: $ea $a3 $c0
 Jump_000_02cd::
 	ld a, $04                                     ; $02cd: $3e $04
 	ld [wGameplayType], a                         ; $02cf: $ea $ec $c2
@@ -346,7 +340,7 @@ jr_000_0375::
 Call_000_0384::
 	ld a, [wGameplayType]                         ; $0384: $fa $ec $c2
 	cp $04                                        ; $0387: $fe $04
-	ret nc                                        ; $0389: $d0
+	 ret nc                                       ; $0389: $d0
 
 	call Call_000_1f7e                            ; $038a: $cd $7e $1f
 	ld a, [wC0CE]                                 ; $038d: $fa $ce $c0
@@ -3200,23 +3194,23 @@ DrawTitleScreen.loop::
 	jr DrawTitleScreen.loop                       ; $13dc: $18 $d1
 
 Call_000_13de::
-	ld a, [wC0A3]                                 ; $13de: $fa $a3 $c0
-	and a                                         ; $13e1: $a7
-	ret z                                         ; $13e2: $c8
+	ld a, [wHasWon]                               ; Check if player has beaten the game or not
+	and a                                         ; If a = 0, the player hasn't beaten the game yet
+	 ret z                                        ; 
 
-	ld a, [wFrameCounter]                                 ; $13e3: $fa $a4 $c0
-	and $01                                       ; $13e6: $e6 $01
-	ret nz                                        ; $13e8: $c0
+	ld a, [wFrameCounter]                         ; Add a delay
+	and $0                                        ; Only update every other frame
+	 ret nz                                       ; 
 
 	xor a                                         ; $13e9: $af
 	ld [wTimerSeconds], a                                 ; $13ea: $ea $f2 $c0
 	ld a, [wC0D7]                                 ; $13ed: $fa $d7 $c0
 	and a                                         ; $13f0: $a7
-	jr z, jr_000_13ff                             ; $13f1: $28 $0c
+	 jr z, jr_000_13ff                            ; $13f1: $28 $0c
 
 	ldh a, [rSCY]                                 ; $13f3: $f0 $42
 	and a                                         ; $13f5: $a7
-	jr nz, jr_000_13ff                            ; $13f6: $20 $07
+	 jr nz, jr_000_13ff                           ; $13f6: $20 $07
 
 jr_000_13f8::
 	ld a, [wTimerSeconds]                                 ; $13f8: $fa $f2 $c0
@@ -7319,7 +7313,7 @@ Jump_000_2ba6::
 	ld [wC0A2], a                                 ; $2bad: $ea $a2 $c0
 	ld [wC0D7], a                                 ; $2bb0: $ea $d7 $c0
 	inc a                                         ; $2bb3: $3c
-	ld [wC0A3], a                                 ; $2bb4: $ea $a3 $c0
+	ld [wHasWon], a                                 ; $2bb4: $ea $a3 $c0
 	jp Jump_000_02cd                              ; $2bb7: $c3 $cd $02
 
 

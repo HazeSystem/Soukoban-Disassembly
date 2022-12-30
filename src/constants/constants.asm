@@ -5,7 +5,8 @@ P1_ARROWS EQU P1F_5 ; Arrow keys
 P1_BUTTON EQU P1F_4 ; A/B/Start/Select 
 
 ; Gameplay modes
-G_EDITOR  EQU 2
+G_EDITOR  EQU $02
+G_TITLE   EQU $04
 
 ; Key equates
 K_A       EQU %00000001

@@ -348,6 +348,7 @@ wC09E:: ; C09E
 	ds 1
 wC09F:: ; C09F
 	ds 1
+
 ; Start of non-OAM data
 wC0A0:: ; C0A0
 	ds 1
@@ -355,7 +356,7 @@ wC0A1:: ; C0A1
 	ds 1
 wC0A2:: ; C0A2
 	ds 1
-wC0A3:: ; C0A3
+wHasWon:: ; C0A3 - any value > 0 means player has "beaten" the game (or input the secret keypress at the title screen)
 	ds 1
 wFrameCounter:: ; C0A4 - incremented each frame in the main game loop
 	ds 1
