@@ -452,13 +452,13 @@ wC0ED:: ; C0ED
 	ds 1
 wC0EE:: ; C0EE
 	ds 1
-wC0EF:: ; C0EF
+wTimerFrames:: ; C0EF
 	ds 1
 wC0F0:: ; C0F0
 	ds 1
 wC0F1:: ; C0F1
 	ds 1
-wC0F2:: ; C0F2
+wTimerSeconds:: ; C0F2 - Approximate Number of seconds passed
 	ds 1
 wC0F3:: ; C0F3
 	ds 1

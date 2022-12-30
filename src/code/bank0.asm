@@ -42,7 +42,7 @@ Jump_000_0198::
 	ld a, $04                                     ; $019b: $3e $04
 	ldh [rIE], a                                  ; $019d: $e0 $ff
 	xor a                                         ; $019f: $af
-	ld [wC0F2], a                                 ; $01a0: $ea $f2 $c0
+	ld [wTimerSeconds], a                                 ; $01a0: $ea $f2 $c0
 	call LCDOff                            ; $01a3: $cd $2c $21
 	ld sp, $fffe                                  ; $01a6: $31 $fe $ff	
 	call WriteDMACodeToHRAM                            ; $01a9: $cd $b5 $20
@@ -78,10 +78,10 @@ jr_000_01e3::
 	ld a, $00                                     ; $01eb: $3e $00
 	ld hl, wC000                                  ; $01ed: $21 $00 $c0
 
-jr_000_01f0::
+.clearRAMLoop::
 	ld [hl+], a                                   ; $01f0: $22
 	dec b                                         ; $01f1: $05
-	jr nz, jr_000_01f0                            ; $01f2: $20 $fc
+	 jr nz, .clearRAMLoop                         ; $01f2: $20 $fc
 
 	; load palettes
 	ld a, $e4                                     ; $01f4: $3e $e4
@@ -110,15 +110,15 @@ GameLoop::
 	ld [wC0A4], a                                 ; $0226: $ea $a4 $c0
 	call Call_000_2691                            ; $0229: $cd $91 $26
 	xor a                                         ; $022c: $af
-	ldh [$8b], a                                  ; $022d: $e0 $8b
-	call Call_000_2084                            ; $022f: $cd $84 $20
+	ldh [hKeys], a                                  ; $022d: $e0 $8b
+	call ReadJoypad                            ; $022f: $cd $84 $20
 	ld a, [wGameplayType]                         ; $0232: $fa $ec $c2
 	and $f0                                       ; $0235: $e6 $f0
 	 jr nz, jr_000_0288                           ; $0237: $20 $4f
 
 	ld a, [wGameplayType]                         ; $0239: $fa $ec $c2
-	cp $01                                        ; $023c: $fe $01
-	jr z, jr_000_027e                             ; $023e: $28 $3e
+	cp $01                                        ; 1 = Sample gameplay
+	jr z, SampleGameplay                          ; $023e: $28 $3e
 
 	cp $02                                        ; $0240: $fe $02
 	jr z, jr_000_0283                             ; $0242: $28 $3f
@@ -126,8 +126,8 @@ GameLoop::
 	cp $03                                        ; $0244: $fe $03
 	jr z, jr_000_028d                             ; $0246: $28 $45
 
-	cp $04                                        ; $0248: $fe $04
-	jr z, jr_000_02a8                             ; $024a: $28 $5c
+	cp $04                                        ; 4 = Title screen
+	jr z, TitleScreen                             ; $024a: $28 $5c
 
 	cp $05                                        ; $024c: $fe $05
 	jr z, jr_000_0292                             ; $024e: $28 $42
@@ -143,7 +143,7 @@ GameLoop::
 	and $09                                       ; $025e: $e6 $09
 	jr nz, Jump_000_0277                          ; $0260: $20 $15
 
-	ldh a, [$8b]                                  ; $0262: $f0 $8b
+	ldh a, [hKeys]                                  ; $0262: $f0 $8b
 	and $08                                       ; $0264: $e6 $08
 	jp z, Jump_000_0277                           ; $0266: $ca $77 $02
 
@@ -155,11 +155,11 @@ GameLoop::
 	ld [wC384], a                                 ; $0274: $ea $84 $c3
 
 Jump_000_0277::
-	ldh a, [$8b]                                  ; $0277: $f0 $8b
+	ldh a, [hKeys]                                  ; $0277: $f0 $8b
 	ld [wKeyState], a                                 ; $0279: $ea $fd $c0
 	jr AwaitVBlank                                ; $027c: $18 $76
 
-jr_000_027e::
+SampleGameplay::
 	call Call_000_1616                            ; $027e: $cd $16 $16
 	jr AwaitVBlank                                ; $0281: $18 $71
 
@@ -193,13 +193,13 @@ jr_000_02a3::
 	call Call_000_2d1c                            ; $02a3: $cd $1c $2d
 	jr AwaitVBlank                                ; $02a6: $18 $4c
 
-jr_000_02a8::
+TitleScreen::
 	call Call_000_13de                            ; $02a8: $cd $de $13
 	ld a, [wC0A3]                                 ; $02ab: $fa $a3 $c0
 	and a                                         ; $02ae: $a7
 	jr nz, AwaitVBlank                            ; $02af: $20 $43
 
-	ldh a, [$8b]                                  ; $02b1: $f0 $8b
+	ldh a, [hKeys]                                  ; $02b1: $f0 $8b
 	cp $08                                        ; $02b3: $fe $08
 	jr nz, jr_000_02c4                            ; $02b5: $20 $0d
 
@@ -211,7 +211,7 @@ jr_000_02a8::
 
 
 jr_000_02c4::
-	ldh a, [$8b]                                  ; $02c4: $f0 $8b
+	ldh a, [hKeys]                                  ; $02c4: $f0 $8b
 	cp $47                                        ; $02c6: $fe $47
 	jr nz, jr_000_02d8                            ; $02c8: $20 $0e
 
@@ -225,7 +225,7 @@ Jump_000_02cd::
 
 
 jr_000_02d8::
-	ld a, [wC0F2]                                 ; $02d8: $fa $f2 $c0
+	ld a, [wTimerSeconds]                                 ; $02d8: $fa $f2 $c0
 	cp $05                                        ; $02db: $fe $05
 	jr c, AwaitVBlank                             ; $02dd: $38 $15
 
@@ -258,21 +258,21 @@ InterruptVBlank::
 	push hl                                       ; $0303: $e5
 	ld a, [wGameplayType]                         ; $0304: $fa $ec $c2
 	and $f0                                       ; $0307: $e6 $f0
-	 jr nz, SkipDMA                               ; $0309: $20 $12
+	 jr nz, .skipDMA                               ; $0309: $20 $12
 
 ; DMA routine
 	call $ff80                                    ; $030b: Run DMA routine, stored in high RAM
 	xor a                                         ; $030e: $af
 	ld [wC0F5], a                                 ; $030f: $ea $f5 $c0
 
-WaitVBlankLoop::
+.waitVBlankLoop::
 	ldh a, [rSTAT]                                ; $0312: $f0 $41
 	and $03                                       ; Strip out everything but bits 0/1 (Mode Flag)
 	cp $01                                        ; $01 = In V-Blank
-	 jr nz, WaitVBlankLoop                        ; Repeat until VBlank is complete
+	 jr nz, .waitVBlankLoop                       ; Repeat until VBlank is complete
 	call Call_000_053d                            ; $031a: $cd $3d $05
 
-SkipDMA::
+.skipDMA::
 	xor a                                         ; $031d: $af
 	ld [wC0AB], a                                 ; $031e: $ea $ab $c0
 	call Call_000_1bdb                            ; $0321: $cd $db $1b
@@ -290,7 +290,7 @@ InterruptTimer::
 	push bc                                       ; $032e: $c5
 	push de                                       ; $032f: $d5
 	push hl                                       ; $0330: $e5
-	call Call_000_127d                            ; $0331: $cd $7d $12
+	call UpdateTimer                            ; $0331: $cd $7d $12
 	call Call_000_218e                            ; $0334: $cd $8e $21
 	ld a, $01                                     ; $0337: $3e $01
 	ldh [$97], a                                  ; $0339: $e0 $97
@@ -302,11 +302,11 @@ InterruptTimer::
 
 
 Jump_000_0340::
-	ldh a, [$8b]                                  ; $0340: $f0 $8b
+	ldh a, [hKeys]                                  ; $0340: $f0 $8b
 	and a                                         ; $0342: $a7
 	jr nz, jr_000_035f                            ; $0343: $20 $1a
 
-	ld a, [wC0F2]                                 ; $0345: $fa $f2 $c0
+	ld a, [wTimerSeconds]                                 ; $0345: $fa $f2 $c0
 	cp $3c                                        ; $0348: $fe $3c
 	jr nz, jr_000_0363                            ; $034a: $20 $17
 
@@ -322,7 +322,7 @@ Jump_000_0340::
 
 jr_000_035f::
 	xor a                                         ; $035f: $af
-	ld [wC0F2], a                                 ; $0360: $ea $f2 $c0
+	ld [wTimerSeconds], a                         ; $0360: $ea $f2 $c0
 
 jr_000_0363::
 	call Call_000_06a8                            ; $0363: $cd $a8 $06
@@ -330,14 +330,14 @@ jr_000_0363::
 	and a                                         ; $0369: $a7
 	ret z                                         ; $036a: $c8
 
-	ld a, [wC0F2]                                 ; $036b: $fa $f2 $c0
+	ld a, [wTimerSeconds]                                 ; $036b: $fa $f2 $c0
 	and $01                                       ; $036e: $e6 $01
 	jr z, jr_000_0375                             ; $0370: $28 $03
 
 	call jr_000_0cd6                              ; $0372: $cd $d6 $0c
 
 jr_000_0375::
-	ldh a, [$8b]                                  ; $0375: $f0 $8b
+	ldh a, [hKeys]                                  ; $0375: $f0 $8b
 	and $f0                                       ; $0377: $e6 $f0
 	ret z                                         ; $0379: $c8
 
@@ -565,7 +565,7 @@ Jump_000_04c9::
 
 Jump_000_04d0::
 	ld e, a                                       ; $04d0: $5f
-	ld a, [wTileSize]                                 ; $04d1: $fa $d1 $c0
+	ld a, [wTileSize]                             ; $04d1: $fa $d1 $c0
 	cp $10                                        ; $04d4: $fe $10
 	jr z, jr_000_04dd                             ; $04d6: $28 $05
 
@@ -605,7 +605,7 @@ Call_000_04f3::
 Call_000_0500::
 	ld a, [wC0CE]                                 ; $0500: $fa $ce $c0
 	ld e, a                                       ; $0503: $5f
-	ld a, [wTileSize]                                 ; $0504: $fa $d1 $c0
+	ld a, [wTileSize]                             ; $0504: $fa $d1 $c0
 	cp $08                                        ; $0507: $fe $08
 	jr nz, jr_000_0518                            ; $0509: $20 $0d
 
@@ -662,9 +662,8 @@ Call_000_053d::
 
 	ld a, [wC0F3]                                 ; $0543: $fa $f3 $c0
 	and a                                         ; $0546: $a7
-	jr z, DrawTile                           ; $0547: $28 $03
-
-	jp RenderText                              ; $0549: $c3 $e1 $1b
+	 jr z, DrawTile                               ; $0547: $28 $03
+	jp RenderText                                 ; $0549: $c3 $e1 $1b
 
 
 ; Copy a 16x16 tile to VRAM
@@ -745,11 +744,11 @@ Call_000_0582::
 	call jr_000_26cc                              ; $05b0: $cd $cc $26
 
 Jump_000_05b3::
-	ld a, [wC0F2]                                 ; $05b3: $fa $f2 $c0
+	ld a, [wTimerSeconds]                                 ; $05b3: $fa $f2 $c0
 	ld b, a                                       ; $05b6: $47
 
 jr_000_05b7::
-	ld a, [wC0F2]                                 ; $05b7: $fa $f2 $c0
+	ld a, [wTimerSeconds]                                 ; $05b7: $fa $f2 $c0
 	sub b                                         ; $05ba: $90
 	cp $02                                        ; $05bb: $fe $02
 	jr z, jr_000_05b7                             ; $05bd: $28 $f8
@@ -990,7 +989,7 @@ jr_000_06bc::
 	jr jr_000_06f7                                ; $06ee: $18 $07
 
 jr_000_06f0::
-	ldh a, [$8b]                                  ; $06f0: $f0 $8b
+	ldh a, [hKeys]                                  ; $06f0: $f0 $8b
 	cp $01                                        ; $06f2: $fe $01
 	jp z, Jump_000_0884                           ; $06f4: $ca $84 $08
 
@@ -1342,7 +1341,7 @@ Call_000_093e::
 	and $01                                       ; $0941: $e6 $01
 	ret nz                                        ; $0943: $c0
 
-	ldh a, [$8b]                                  ; $0944: $f0 $8b
+	ldh a, [hKeys]                                  ; $0944: $f0 $8b
 	and $f0                                       ; $0946: $e6 $f0
 	jr z, jr_000_095a                             ; $0948: $28 $10
 
@@ -1995,7 +1994,7 @@ Jump_000_0cc5::
 	and a                                         ; $0cce: $a7
 	jr nz, jr_000_0cd6                            ; $0ccf: $20 $05
 
-	ldh a, [$8b]                                  ; $0cd1: $f0 $8b
+	ldh a, [hKeys]                                  ; $0cd1: $f0 $8b
 	and $f1                                       ; $0cd3: $e6 $f1
 	ret z                                         ; $0cd5: $c8
 
@@ -2565,7 +2564,7 @@ Call_000_1010::
 	call Call_000_121f                            ; $1013: $cd $1f $12
 	call Call_000_1264                            ; $1016: $cd $64 $12
 	call Call_000_1236                            ; $1019: $cd $36 $12
-	ldh a, [$8b]                                  ; $101c: $f0 $8b
+	ldh a, [hKeys]                                  ; $101c: $f0 $8b
 	and $08                                       ; $101e: $e6 $08
 	ret z                                         ; $1020: $c8
 
@@ -2719,7 +2718,7 @@ jr_000_110c::
 
 
 Call_000_110f::
-	ldh a, [$8b]                                  ; $110f: $f0 $8b
+	ldh a, [hKeys]                                  ; $110f: $f0 $8b
 	and $01                                       ; $1111: $e6 $01
 	ret z                                         ; $1113: $c8
 
@@ -2900,7 +2899,7 @@ Call_000_1213::
 
 
 Call_000_121f::
-	ldh a, [$8b]                                  ; $121f: $f0 $8b
+	ldh a, [hKeys]                                  ; $121f: $f0 $8b
 	and $02                                       ; $1221: $e6 $02
 	ret z                                         ; $1223: $c8
 
@@ -2977,20 +2976,21 @@ jr_000_1275::
 	ret                                           ; $127c: $c9
 
 
-Call_000_127d::
+; Updates a timer every 64 interrupts
+UpdateTimer::
 	or a                                          ; $127d: $b7
-	ld a, [wC0EF]                                 ; $127e: $fa $ef $c0
-	add $01                                       ; $1281: $c6 $01
-	ld [wC0EF], a                                 ; $1283: $ea $ef $c0
-	cp $40                                        ; $1286: $fe $40
-	ret c                                         ; $1288: $d8
+	ld a, [wTimerFrames]                          ; Grab current frames
+	add $01                                       ; Increase by one
+	ld [wTimerFrames], a                          ; Update frames
+	cp $40                                        ; Quit if < 64 frames
+	 ret c                                        ; 
 
-	ld a, [wC0F2]                                 ; $1289: $fa $f2 $c0
-	inc a                                         ; $128c: $3c
-	ld [wC0F2], a                                 ; $128d: $ea $f2 $c0
-	xor a                                         ; $1290: $af
-	ld [wC0EF], a                                 ; $1291: $ea $ef $c0
-	ret                                           ; $1294: $c9
+	ld a, [wTimerSeconds]                         ; Every 64 frames, update the seconds timer
+	inc a                                         ; 
+	ld [wTimerSeconds], a                         ; 
+	xor a                                         ; Reset timer frames
+	ld [wTimerFrames], a                          ; 
+	ret                                           ; 
 
 
 Call_000_1295::
@@ -2999,7 +2999,7 @@ Call_000_1295::
 	push de                                       ; $1297: $d5
 	push hl                                       ; $1298: $e5
 	xor a                                         ; $1299: $af
-	ld [wC0EF], a                                 ; $129a: $ea $ef $c0
+	ld [wTimerFrames], a                                 ; $129a: $ea $ef $c0
 	ld [wC0F0], a                                 ; $129d: $ea $f0 $c0
 
 jr_000_12a0::
@@ -3007,14 +3007,14 @@ jr_000_12a0::
 	and a                                         ; $12a2: $a7
 	jr z, jr_000_12a0                             ; $12a3: $28 $fb
 
-	ld a, [wC0EF]                                 ; $12a5: $fa $ef $c0
+	ld a, [wTimerFrames]                                 ; $12a5: $fa $ef $c0
 	inc a                                         ; $12a8: $3c
-	ld [wC0EF], a                                 ; $12a9: $ea $ef $c0
+	ld [wTimerFrames], a                                 ; $12a9: $ea $ef $c0
 	cp $ff                                        ; $12ac: $fe $ff
 	jr nz, jr_000_12a0                            ; $12ae: $20 $f0
 
 	xor a                                         ; $12b0: $af
-	ld [wC0EF], a                                 ; $12b1: $ea $ef $c0
+	ld [wTimerFrames], a                                 ; $12b1: $ea $ef $c0
 	ld a, [wC0F0]                                 ; $12b4: $fa $f0 $c0
 	inc a                                         ; $12b7: $3c
 	ld [wC0F0], a                                 ; $12b8: $ea $f0 $c0
@@ -3215,7 +3215,7 @@ Call_000_13de::
 	ret nz                                        ; $13e8: $c0
 
 	xor a                                         ; $13e9: $af
-	ld [wC0F2], a                                 ; $13ea: $ea $f2 $c0
+	ld [wTimerSeconds], a                                 ; $13ea: $ea $f2 $c0
 	ld a, [wC0D7]                                 ; $13ed: $fa $d7 $c0
 	and a                                         ; $13f0: $a7
 	jr z, jr_000_13ff                             ; $13f1: $28 $0c
@@ -3225,13 +3225,13 @@ Call_000_13de::
 	jr nz, jr_000_13ff                            ; $13f6: $20 $07
 
 jr_000_13f8::
-	ld a, [wC0F2]                                 ; $13f8: $fa $f2 $c0
+	ld a, [wTimerSeconds]                                 ; $13f8: $fa $f2 $c0
 	cp $03                                        ; $13fb: $fe $03
 	jr nz, jr_000_13f8                            ; $13fd: $20 $f9
 
 jr_000_13ff::
 	xor a                                         ; $13ff: $af
-	ld [wC0F2], a                                 ; $1400: $ea $f2 $c0
+	ld [wTimerSeconds], a                                 ; $1400: $ea $f2 $c0
 	ldh a, [rSCY]                                 ; $1403: $f0 $42
 	cp $48                                        ; $1405: $fe $48
 	jr nz, jr_000_141d                            ; $1407: $20 $14
@@ -3241,7 +3241,7 @@ jr_000_13ff::
 	jr nz, jr_000_1425                            ; $140d: $20 $16
 
 jr_000_140f::
-	ld a, [wC0F2]                                 ; $140f: $fa $f2 $c0
+	ld a, [wTimerSeconds]                                 ; $140f: $fa $f2 $c0
 	cp $03                                        ; $1412: $fe $03
 	jr nz, jr_000_140f                            ; $1414: $20 $f9
 
@@ -3640,13 +3640,13 @@ Call_000_1616::
 	jr nz, jr_000_169c                            ; $1620: $20 $7a
 
 jr_000_1622::
-	ldh a, [$8b]                                  ; $1622: $f0 $8b
+	ldh a, [hKeys]                                  ; $1622: $f0 $8b
 	and $01                                       ; $1624: $e6 $01
 
 jr_000_1626::
 	jr nz, jr_000_163f                            ; $1626: $20 $17
 
-	ldh a, [$8b]                                  ; $1628: $f0 $8b
+	ldh a, [hKeys]                                  ; $1628: $f0 $8b
 	and $f8                                       ; $162a: $e6 $f8
 	ret z                                         ; $162c: $c8
 
@@ -3663,9 +3663,9 @@ jr_000_162d::
 
 
 jr_000_163f::
-	ldh a, [$8b]                                  ; $163f: $f0 $8b
+	ldh a, [hKeys]                                  ; $163f: $f0 $8b
 	or $81                                        ; $1641: $f6 $81
-	ldh [$8b], a                                  ; $1643: $e0 $8b
+	ldh [hKeys], a                                  ; $1643: $e0 $8b
 	ld a, [wC2DA]                                 ; $1645: $fa $da $c2
 	ld b, a                                       ; $1648: $47
 	ld a, [wC2D9]                                 ; $1649: $fa $d9 $c2
@@ -3722,7 +3722,7 @@ jr_000_168f::
 
 
 jr_000_169c::
-	ldh a, [$8b]                                  ; $169c: $f0 $8b
+	ldh a, [hKeys]                                  ; $169c: $f0 $8b
 	and $08                                       ; $169e: $e6 $08
 	jr z, jr_000_163f                             ; $16a0: $28 $9d
 
@@ -3734,7 +3734,7 @@ jr_000_169c::
 
 
 Call_000_16af::
-	ldh a, [$8b]                                  ; $16af: $f0 $8b
+	ldh a, [hKeys]                                  ; $16af: $f0 $8b
 	and $cb                                       ; $16b1: $e6 $cb
 	ret z                                         ; $16b3: $c8
 
@@ -3753,7 +3753,7 @@ jr_000_16c2::
 	call Call_000_1295                            ; $16c5: $cd $95 $12
 	call Call_000_1295                            ; $16c8: $cd $95 $12
 	call Call_000_1295                            ; $16cb: $cd $95 $12
-	ldh a, [$8b]                                  ; $16ce: $f0 $8b
+	ldh a, [hKeys]                                  ; $16ce: $f0 $8b
 	and $0b                                       ; $16d0: $e6 $0b
 	jp z, jr_000_1726                             ; $16d2: $ca $26 $17
 
@@ -3761,7 +3761,7 @@ jr_000_16c2::
 	and a                                         ; $16d8: $a7
 	jr nz, jr_000_170f                            ; $16d9: $20 $34
 
-	ldh a, [$8b]                                  ; $16db: $f0 $8b
+	ldh a, [hKeys]                                  ; $16db: $f0 $8b
 	and $02                                       ; $16dd: $e6 $02
 	jr nz, jr_000_1708                            ; $16df: $20 $27
 
@@ -3796,7 +3796,7 @@ jr_000_1708::
 	jr jr_000_1726                                ; $170d: $18 $17
 
 jr_000_170f::
-	ldh a, [$8b]                                  ; $170f: $f0 $8b
+	ldh a, [hKeys]                                  ; $170f: $f0 $8b
 	and $08                                       ; $1711: $e6 $08
 	jr nz, jr_000_16e1                            ; $1713: $20 $cc
 
@@ -3816,7 +3816,7 @@ jr_000_1726::
 
 
 Call_000_172e::
-	ldh a, [$8b]                                  ; $172e: $f0 $8b
+	ldh a, [hKeys]                                  ; $172e: $f0 $8b
 	and $c0                                       ; $1730: $e6 $c0
 	cp $40                                        ; $1732: $fe $40
 	jr z, jr_000_1753                             ; $1734: $28 $1d
@@ -3868,7 +3868,7 @@ jr_000_1768::
 
 
 Call_000_176a::
-	ldh a, [$8b]                                  ; $176a: $f0 $8b
+	ldh a, [hKeys]                                  ; $176a: $f0 $8b
 	and $c0                                       ; $176c: $e6 $c0
 	cp $40                                        ; $176e: $fe $40
 	jr z, jr_000_1785                             ; $1770: $28 $13
@@ -3973,7 +3973,7 @@ jr_000_17e8::
 	and a                                         ; $17fe: $a7
 	jp z, Jump_000_180b                           ; $17ff: $ca $0b $18
 
-	ldh a, [$8b]                                  ; $1802: $f0 $8b
+	ldh a, [hKeys]                                  ; $1802: $f0 $8b
 	and a                                         ; $1804: $a7
 	jp z, jr_000_1a64                             ; $1805: $ca $64 $1a
 
@@ -3981,31 +3981,31 @@ jr_000_17e8::
 
 
 Jump_000_180b::
-	ldh a, [$8b]                                  ; $180b: $f0 $8b
+	ldh a, [hKeys]                                  ; $180b: $f0 $8b
 	and $10                                       ; $180d: $e6 $10
 	jr nz, jr_000_183c                            ; $180f: $20 $2b
 
-	ldh a, [$8b]                                  ; $1811: $f0 $8b
+	ldh a, [hKeys]                                  ; $1811: $f0 $8b
 	and $20                                       ; $1813: $e6 $20
 	jr nz, jr_000_1864                            ; $1815: $20 $4d
 
-	ldh a, [$8b]                                  ; $1817: $f0 $8b
+	ldh a, [hKeys]                                  ; $1817: $f0 $8b
 	and $40                                       ; $1819: $e6 $40
 	jr nz, jr_000_188e                            ; $181b: $20 $71
 
-	ldh a, [$8b]                                  ; $181d: $f0 $8b
+	ldh a, [hKeys]                                  ; $181d: $f0 $8b
 	and $80                                       ; $181f: $e6 $80
 	jp nz, Jump_000_18a9                          ; $1821: $c2 $a9 $18
 
-	ldh a, [$8b]                                  ; $1824: $f0 $8b
+	ldh a, [hKeys]                                  ; $1824: $f0 $8b
 	and $01                                       ; $1826: $e6 $01
 	jp nz, Jump_000_18cf                          ; $1828: $c2 $cf $18
 
-	ldh a, [$8b]                                  ; $182b: $f0 $8b
+	ldh a, [hKeys]                                  ; $182b: $f0 $8b
 	and $02                                       ; $182d: $e6 $02
 	jp nz, Jump_000_1957                          ; $182f: $c2 $57 $19
 
-	ldh a, [$8b]                                  ; $1832: $f0 $8b
+	ldh a, [hKeys]                                  ; $1832: $f0 $8b
 	and $04                                       ; $1834: $e6 $04
 	jp nz, Jump_000_1a3c                          ; $1836: $c2 $3c $1a
 
@@ -4238,7 +4238,7 @@ jr_000_198a::
 	call Call_000_0e7c                            ; $1991: $cd $7c $0e
 	ld a, [wC0AC]                                 ; $1994: $fa $ac $c0
 	ld [hl], a                                    ; $1997: $77
-	ldh a, [$8b]                                  ; $1998: $f0 $8b
+	ldh a, [hKeys]                                  ; $1998: $f0 $8b
 	and $02                                       ; $199a: $e6 $02
 	jp nz, Jump_000_19b4                          ; $199c: $c2 $b4 $19
 
@@ -4341,7 +4341,7 @@ Jump_000_1a3c::
 	ld [wC0FE], a                                 ; $1a61: $ea $fe $c0
 
 jr_000_1a64::
-	ldh a, [$8b]                                  ; $1a64: $f0 $8b
+	ldh a, [hKeys]                                  ; $1a64: $f0 $8b
 	ld [wKeyState], a                                 ; $1a66: $ea $fd $c0
 	ret                                           ; $1a69: $c9
 
@@ -4593,20 +4593,20 @@ Call_000_1bdb::
 
 RenderText::
 	ld de, wVRAMBuffer                            ; $1be1: $11 $ad $c0
-	ld a, [wVRAMPointerHigh]                                 ; $1be4: $fa $f7 $c0
+	ld a, [wVRAMPointerHigh]                      ; $1be4: $fa $f7 $c0
 	ld h, a                                       ; $1be7: $67
-	ld a, [wVRAMPointerLow]                                 ; $1be8: $fa $f8 $c0
+	ld a, [wVRAMPointerLow]                       ; $1be8: $fa $f8 $c0
 	ld l, a                                       ; $1beb: $6f
 
 Jump_000_1bec::
 	ld a, [de]                                    ; $1bec: $1a
 	cp $ff                                        ; $1bed: $fe $ff
-	jr z, .continue                             ; $1bef: $28 $08
+	 jr z, .continue                              ; $1bef: $28 $08
 
 .loop
 	ld [hl], a                                    ; $1bf1: $77
 	cp [hl]                                       ; $1bf2: $be
-	jr nz, .loop                            ; $1bf3: $20 $fc
+	jr nz, .loop                                  ; $1bf3: $20 $fc
 
 	inc hl                                        ; $1bf5: $23
 	inc de                                        ; $1bf6: $13
@@ -4749,7 +4749,7 @@ Jump_000_1cff::
 	and a                                         ; $1d07: $a7
 	jr nz, jr_000_1d5a                            ; $1d08: $20 $50
 
-	ldh a, [$8b]                                  ; $1d0a: $f0 $8b
+	ldh a, [hKeys]                                  ; $1d0a: $f0 $8b
 	and $04                                       ; $1d0c: $e6 $04
 	jr z, jr_000_1d23                             ; $1d0e: $28 $13
 
@@ -4767,7 +4767,7 @@ jr_000_1d1d::
 	jr jr_000_1d5a                                ; $1d21: $18 $37
 
 jr_000_1d23::
-	ldh a, [$8b]                                  ; $1d23: $f0 $8b
+	ldh a, [hKeys]                                  ; $1d23: $f0 $8b
 	and $40                                       ; $1d25: $e6 $40
 	jr z, jr_000_1d2f                             ; $1d27: $28 $06
 
@@ -4776,7 +4776,7 @@ jr_000_1d23::
 	jr jr_000_1d5a                                ; $1d2d: $18 $2b
 
 jr_000_1d2f::
-	ldh a, [$8b]                                  ; $1d2f: $f0 $8b
+	ldh a, [hKeys]                                  ; $1d2f: $f0 $8b
 	and $80                                       ; $1d31: $e6 $80
 	jr z, jr_000_1d3c                             ; $1d33: $28 $07
 
@@ -4785,7 +4785,7 @@ jr_000_1d2f::
 	jr jr_000_1d5a                                ; $1d3a: $18 $1e
 
 jr_000_1d3c::
-	ldh a, [$8b]                                  ; $1d3c: $f0 $8b
+	ldh a, [hKeys]                                  ; $1d3c: $f0 $8b
 	and $09                                       ; $1d3e: $e6 $09
 	jr nz, jr_000_1d84                            ; $1d40: $20 $42
 
@@ -4793,7 +4793,7 @@ jr_000_1d3c::
 	cp $10                                        ; $1d45: $fe $10
 	jr z, jr_000_1d5a                             ; $1d47: $28 $11
 
-	ldh a, [$8b]                                  ; $1d49: $f0 $8b
+	ldh a, [hKeys]                                  ; $1d49: $f0 $8b
 	and $02                                       ; $1d4b: $e6 $02
 	jr z, jr_000_1d5a                             ; $1d4d: $28 $0b
 
@@ -4844,12 +4844,12 @@ Jump_000_1d98::
 	xor a                                         ; $1da1: $af
 	ld [wC0F9], a                                 ; $1da2: $ea $f9 $c0
 	ld [wC0FA], a                                 ; $1da5: $ea $fa $c0
-	ld [wC0F2], a                                 ; $1da8: $ea $f2 $c0
+	ld [wTimerSeconds], a                                 ; $1da8: $ea $f2 $c0
 	ld a, $08                                     ; $1dab: $3e $08
 	ld [wC384], a                                 ; $1dad: $ea $84 $c3
 
 jr_000_1db0::
-	ldh a, [$8b]                                  ; $1db0: $f0 $8b
+	ldh a, [hKeys]                                  ; $1db0: $f0 $8b
 	ld [wKeyState], a                                 ; $1db2: $ea $fd $c0
 	ret                                           ; $1db5: $c9
 
@@ -5291,61 +5291,60 @@ jr_000_2082::
 	ret                                           ; $2083: $c9
 
 
-Call_000_2084::
-	ld a, $20                                     ; $2084: $3e $20
-	ldh [rP1], a                                  ; $2086: $e0 $00
-	ldh a, [rP1]                                  ; $2088: $f0 $00
-	ldh a, [rP1]                                  ; $208a: $f0 $00
-	cpl                                           ; $208c: $2f
-	and $0f                                       ; $208d: $e6 $0f
-	swap a                                        ; $208f: $cb $37
-	ld b, a                                       ; $2091: $47
-	ld a, $10                                     ; $2092: $3e $10
-	ldh [rP1], a                                  ; $2094: $e0 $00
-	ldh a, [rP1]                                  ; $2096: $f0 $00
-	ldh a, [rP1]                                  ; $2098: $f0 $00
-	ldh a, [rP1]                                  ; $209a: $f0 $00
-	ldh a, [rP1]                                  ; $209c: $f0 $00
-	ldh a, [rP1]                                  ; $209e: $f0 $00
-	ldh a, [rP1]                                  ; $20a0: $f0 $00
-	cpl                                           ; $20a2: $2f
-	and $0f                                       ; $20a3: $e6 $0f
-	or b                                          ; $20a5: $b0
-	ld c, a                                       ; $20a6: $4f
-	ldh a, [$8b]                                  ; $20a7: $f0 $8b
-	xor c                                         ; $20a9: $a9
-	and c                                         ; $20aa: $a1
-	ldh [$8c], a                                  ; $20ab: $e0 $8c
-	ld a, c                                       ; $20ad: $79
-	ldh [$8b], a                                  ; $20ae: $e0 $8b
-	ld a, $30                                     ; $20b0: $3e $30
-	ldh [rP1], a                                  ; $20b2: $e0 $00
-	ret                                           ; $20b4: $c9
+; Read keys from joypad
+; Input:
+;   $FF8B = Disabled key mask, any bits enabled here will have its key presses ignored
+ReadJoypad::
+	ld a, P1_ARROWS                               ; Direction keys
+	ldh [rP1], a                                  ; Set rP1 to read arrow keys
+	ldh a, [rP1]                                  ; Short delay to allow inputs to stabilize
+	ldh a, [rP1]                                  ; A = Direction keys
+	cpl                                           ; 
+	and $0f                                       ; Clear out unused bits
+	swap a                                        ; Move lower nibble into upper nibble
+	ld b, a                                       ; Back up direction keys
+	ld a, P1_BUTTON                               ; A/B/Start/Select
+	ldh [rP1], a                                  ; 
+	ldh a, [rP1]                                  ; Delay to make sure proper keys are read
+	ldh a, [rP1]                                  ; 
+	ldh a, [rP1]                                  ; 
+	ldh a, [rP1]                                  ; 
+	ldh a, [rP1]                                  ; 
+	ldh a, [rP1]                                  ; A = A/B/Start/Select
+	cpl                                           ; 
+	and $0f                                       ; Clear out unused bits
+	or b                                          ; Combine direction keys and buttons
+	ld c, a                                       ; C = button presses
+	ldh a, [hKeys]                                  ; A = disabled key mask (any bits set to 1 will not register) 
+	xor c                                         ; Disable keys that have been masked out
+	and c                                         ; Mask with the pressed keys
+	ldh [$8c], a                                  ; Store masked input
+	ld a, c                                       ; 
+	ldh [hKeys], a                                  ; Store unmasked input
+	ld a, $30                                     ; Enable button and arrow keypresses
+	ldh [rP1], a                                  ; 
+	ret                                           ; 
 
 
 WriteDMACodeToHRAM::
 	ld c, $80                                     ; $20b5: $0e $80
-	ld b, DMARoutineEnd - DMARoutine                                    ; $20b7: $06 $0a
-	ld hl, DMARoutine                                  ; $20b9: $21 $c3 $20
-
+	ld b, DMARoutineEnd - DMARoutine              ; $20b7: $06 $0a
+	ld hl, DMARoutine                             ; $20b9: $21 $c3 $20
 .copy
 	ld a, [hl+]                                   ; $20bc: $2a
 	ld [c], a                                     ; $20bd: $e2
 	inc c                                         ; $20be: $0c
 	dec b                                         ; $20bf: $05
-	jr nz, .copy                            ; $20c0: $20 $fa
-
+	 jr nz, .copy                                 ; $20c0: $20 $fa
 	ret                                           ; $20c2: $c9
 
 DMARoutine:
 	ld a, $c0                                     ; $20c3: $3e $c0
 	ldh [rDMA], a                                 ; $20c5: $e0 $46
 	ld a, $28                                     ; $20c7: $3e $28
-
-jr_000_20c9::
+.delay::                                              ; Delay for ~200ms (DMA transfer takes ~160 ms)
 	dec a                                         ; $20c9: $3d
-	jr nz, jr_000_20c9                            ; $20ca: $20 $fd
-
+	 jr nz, .delay                                ; $20ca: $20 $fd
 	ret                                           ; $20cc: $c9
 DMARoutineEnd:
 
@@ -6984,8 +6983,8 @@ jr_000_293b::
 
 jr_000_293e::
 	ld hl, wC000                                  ; $293e: $21 $00 $c0
-	ld a, $f0                                     ; $2941: $3e $f0
-	ldh [$8b], a                                  ; $2943: $e0 $8b
+	ld a, $f0                                     ; Disable arrow keys
+	ldh [hKeys], a                                ; $2943: $e0 $8b
 	call Call_000_2be3                            ; $2945: $cd $e3 $2b
 
 jr_000_2948::
@@ -7038,7 +7037,7 @@ jr_000_2999::
 	ld a, $f0                                     ; $2999: $3e $f0
 
 jr_000_299b::
-	ldh [$8b], a                                  ; $299b: $e0 $8b
+	ldh [hKeys], a                                  ; $299b: $e0 $8b
 	call Call_000_2be3                            ; $299d: $cd $e3 $2b
 
 jr_000_29a0::
@@ -7366,11 +7365,11 @@ jr_000_2bf8::
 
 
 Call_000_2c04::
-	ld a, [wC0F2]                                 ; $2c04: $fa $f2 $c0
+	ld a, [wTimerSeconds]                                 ; $2c04: $fa $f2 $c0
 	ld b, a                                       ; $2c07: $47
 
 jr_000_2c08::
-	ld a, [wC0F2]                                 ; $2c08: $fa $f2 $c0
+	ld a, [wTimerSeconds]                                 ; $2c08: $fa $f2 $c0
 	sub b                                         ; $2c0b: $90
 	cp $02                                        ; $2c0c: $fe $02
 	jr nz, jr_000_2c08                            ; $2c0e: $20 $f8
@@ -7521,7 +7520,7 @@ Call_000_2d08::
 Call_000_2d1c::
 	call Call_000_1295                            ; $2d1c: $cd $95 $12
 	call Call_000_1295                            ; $2d1f: $cd $95 $12
-	ldh a, [$8b]                                  ; $2d22: $f0 $8b
+	ldh a, [hKeys]                                  ; $2d22: $f0 $8b
 	and $c0                                       ; $2d24: $e6 $c0
 	ret z                                         ; $2d26: $c8
 
