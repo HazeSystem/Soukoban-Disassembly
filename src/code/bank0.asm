@@ -10,7 +10,7 @@ Start::
 	ld hl, $411a                                  ; $015a: $21 $1a $41
 	ld de, wC398                                  ; $015d: $11 $98 $c3
 	ld bc, $0007                                  ; $0160: $01 $07 $00
-	call CopyData                              ; $0163: $cd $5b $21
+	call CopyData                                 ; $0163: $cd $5b $21
 	call Call_000_217c                            ; $0166: $cd $7c $21
 	ld a, $03                                     ; $0169: $3e $03
 	ldh [rTAC], a                                 ; $016b: $e0 $07
@@ -39,11 +39,11 @@ jr_000_0190::
 
 Jump_000_0198::
 	call Call_000_0c0d                            ; $0198: $cd $0d $0c
-	ld a, $04                                     ; $019b: $3e $04
-	ldh [rIE], a                                  ; $019d: $e0 $ff
-	xor a                                         ; $019f: $af
-	ld [wTimerSeconds], a                                 ; $01a0: $ea $f2 $c0
-	call LCDOff                            ; $01a3: $cd $2c $21
+	ld a, IEF_TIMER                               ; 
+	ldh [rIE], a                                  ; Enable timer interrupts
+	xor a                                         ; 
+	ld [wTimerSeconds], a                         ; Clear out timer
+	call LCDOff                                   ; $01a3: $cd $2c $21
 	ld sp, $fffe                                  ; $01a6: $31 $fe $ff	
 	call WriteDMACodeToHRAM                            ; $01a9: $cd $b5 $20
 	
@@ -57,8 +57,8 @@ Jump_000_0198::
 	ld bc, $06d0                                  ; $01be: $01 $d0 $06	
 	call CopyData                                 ; $01c1: $cd $5b $21
 	
-	ld hl, Tileset+$8d0                           ; $01c4: $21 $85 $6a
-	ld de, vTiles1                                ; $01c7: $11 $80 $8d
+	ld hl, Tileset+$8d0                           ; Alphabet
+	ld de, vTiles1                                ; 
 	ld bc, $0140                                  ; $01ca: $01 $40 $01	
 	call CopyData                                 ; $01cd: $cd $5b $21
 	
@@ -67,16 +67,16 @@ Jump_000_0198::
 	jr nz, jr_000_01e3                            ; $01d5: $20 $0c
 
 	ld hl, $6d55                                  ; $01d7: $21 $55 $6d
-	ld de, $8800                                  ; $01da: $11 $00 $88
+	ld de, $8800                                  ; Second Tile Pattern Table in VRAM ($8800 - $97FF)
 	ld bc, $0530                                  ; $01dd: $01 $30 $05
-	call CopyData                              ; $01e0: $cd $5b $21
+	call CopyData                                 ; $01e0: $cd $5b $21
 
 jr_000_01e3::
 	call Call_000_2c8a                            ; $01e3: $cd $8a $2c
 	call ClearBGMap                            ; $01e6: $cd $4c $21
 	ld b, $a0                                     ; $01e9: $06 $a0
 	ld a, $00                                     ; $01eb: $3e $00
-	ld hl, wC000                                  ; $01ed: $21 $00 $c0
+	ld hl, WORK_RAM                                  ; $01ed: $21 $00 $c0
 
 .clearRAMLoop::
 	ld [hl+], a                                   ; $01f0: $22
@@ -105,9 +105,9 @@ jr_000_01e3::
 	ei                                            ; $0221: $fb
 
 GameLoop::
-	ld a, [wC0A4]                                 ; A counter
+	ld a, [wFrameCounter]                                 ; A counter
 	inc a                                         ; $0225: $3c
-	ld [wC0A4], a                                 ; $0226: $ea $a4 $c0
+	ld [wFrameCounter], a                                 ; $0226: $ea $a4 $c0
 	call Call_000_2691                            ; $0229: $cd $91 $26
 	xor a                                         ; $022c: $af
 	ldh [hKeys], a                                  ; $022d: $e0 $8b
@@ -118,22 +118,17 @@ GameLoop::
 
 	ld a, [wGameplayType]                         ; $0239: $fa $ec $c2
 	cp $01                                        ; 1 = Sample gameplay
-	jr z, SampleGameplay                          ; $023e: $28 $3e
-
-	cp $02                                        ; $0240: $fe $02
-	jr z, jr_000_0283                             ; $0242: $28 $3f
-
-	cp $03                                        ; $0244: $fe $03
-	jr z, jr_000_028d                             ; $0246: $28 $45
-
+	 jr z, SampleGameplay                         ; Runs a little animation showing a sample of the game playing
+	cp G_EDITOR                                   ; 2 = Map editor
+	 jr z, Editor                                 ; 
+	cp $03                                        ; 3 = 
+	 jr z, jr_000_028d                            ; 
 	cp $04                                        ; 4 = Title screen
-	jr z, TitleScreen                             ; $024a: $28 $5c
-
-	cp $05                                        ; $024c: $fe $05
-	jr z, jr_000_0292                             ; $024e: $28 $42
-
-	cp $06                                        ; $0250: $fe $06
-	jr z, jr_000_029e                             ; $0252: $28 $4a
+	 jr z, TitleScreen                            ; Shows the title screen
+	cp $05                                        ; 5 = 
+	 jr z, jr_000_0292                            ; 
+	cp $06                                        ; 6 = 
+	 jr z, jr_000_029e                            ; 
 
 	cp $08                                        ; $0254: $fe $08
 	jr z, jr_000_02a3                             ; $0256: $28 $4b
@@ -163,8 +158,8 @@ SampleGameplay::
 	call Call_000_1616                            ; $027e: $cd $16 $16
 	jr AwaitVBlank                                ; $0281: $18 $71
 
-jr_000_0283::
-	call Call_000_1010                            ; $0283: $cd $10 $10
+Editor::
+	call RunEditor                            ; $0283: $cd $10 $10
 	jr AwaitVBlank                                ; $0286: $18 $6c
 
 jr_000_0288::
@@ -242,12 +237,12 @@ jr_000_02d8::
 
 AwaitVBlank::
 	db $76                                        ; $02f4: halt
-	ldh a, [$91]                                  ; Wait for VBlank (will be set to $01 when VBlank interrupt/OAM DMA have finished)
+	ldh a, [hVBlankState]                         ; Wait for VBlank (will be set to $01 when VBlank interrupt/OAM DMA have finished)
 	and a                                         ; $02f7: $a7
 	 jr z, AwaitVBlank                            ; $02f8: $28 $fa
 
 	xor a                                         ; Reset VBlank flag
-	ldh [$91], a                                  ; $02fb: $e0 $91
+	ldh [hVBlankState], a                         ; $02fb: $e0 $91
 	jp GameLoop                                   ; $02fd: $c3 $22 $02
 
 
@@ -271,13 +266,12 @@ InterruptVBlank::
 	cp $01                                        ; $01 = In V-Blank
 	 jr nz, .waitVBlankLoop                       ; Repeat until VBlank is complete
 	call Call_000_053d                            ; $031a: $cd $3d $05
-
 .skipDMA::
 	xor a                                         ; $031d: $af
 	ld [wC0AB], a                                 ; $031e: $ea $ab $c0
 	call Call_000_1bdb                            ; $0321: $cd $db $1b
 	ld a, $01                                     ; $0324: $3e $01
-	ldh [$91], a                                  ; $0326: $e0 $91
+	ldh [hVBlankState], a                                  ; $0326: $e0 $91
 	pop hl                                        ; $0328: $e1
 	pop de                                        ; $0329: $d1
 	pop bc                                        ; $032a: $c1
@@ -474,7 +468,7 @@ jr_000_043b::
 	ld a, $01                                     ; $0443: $3e $01
 	ld [wC0E7], a                                 ; $0445: $ea $e7 $c0
 	ld a, [wGameplayType]                         ; $0448: $fa $ec $c2
-	cp $02                                        ; $044b: $fe $02
+	cp G_EDITOR                                        ; $044b: $fe $02
 	ret z                                         ; $044d: $c8
 
 	ld a, [wC2EE]                                 ; $044e: $fa $ee $c2
@@ -880,7 +874,7 @@ jr_000_065e::
 	ld a, $7f                                     ; $065e: $3e $7f
 
 jr_000_0660::
-	call Call_000_1259                            ; $0660: $cd $59 $12
+	call SetSpriteId                            ; $0660: $cd $59 $12
 
 Call_000_0663::
 	ld hl, wC003                                  ; $0663: $21 $03 $c0
@@ -891,7 +885,7 @@ Call_000_0663::
 
 
 Call_000_066f::
-	ld hl, wC000                                  ; $066f: $21 $00 $c0
+	ld hl, WORK_RAM                                  ; $066f: $21 $00 $c0
 	ld a, [wTileSize]                                 ; $0672: $fa $d1 $c0
 	ld c, a                                       ; $0675: $4f
 	ld a, [wC0D0]                                 ; $0676: $fa $d0 $c0
@@ -948,14 +942,14 @@ Call_000_06a8::
 	jr z, jr_000_06bc                             ; $06ad: $28 $0d
 
 	call Jump_000_04a4                            ; $06af: $cd $a4 $04
-	ld a, [wC0A4]                                 ; $06b2: $fa $a4 $c0
+	ld a, [wFrameCounter]                                 ; $06b2: $fa $a4 $c0
 	and $01                                       ; $06b5: $e6 $01
 	jr nz, jr_000_06bc                            ; $06b7: $20 $03
 
 	call Jump_000_04a4                            ; $06b9: $cd $a4 $04
 
 jr_000_06bc::
-	ld hl, wC000                                  ; $06bc: $21 $00 $c0
+	ld hl, WORK_RAM                                  ; $06bc: $21 $00 $c0
 	ld a, [wC0CF]                                 ; $06bf: $fa $cf $c0
 	and a                                         ; $06c2: $a7
 	jp nz, jr_000_07f9                            ; $06c3: $c2 $f9 $07
@@ -1127,7 +1121,7 @@ jr_000_07f6::
 jr_000_07f9::
 	xor a                                         ; $07f9: $af
 	ld [wC0D5], a                                 ; $07fa: $ea $d5 $c0
-	ld hl, wC000                                  ; $07fd: $21 $00 $c0
+	ld hl, WORK_RAM                                  ; $07fd: $21 $00 $c0
 
 Call_000_0800::
 	ld a, [wC0D0]                                 ; $0800: $fa $d0 $c0
@@ -1317,7 +1311,7 @@ jr_000_0924::
 	ld a, $bb                                     ; $0924: $3e $bb
 
 jr_000_0926::
-	call Call_000_1259                            ; $0926: $cd $59 $12
+	call SetSpriteId                            ; $0926: $cd $59 $12
 	pop hl                                        ; $0929: $e1
 	ret                                           ; $092a: $c9
 
@@ -1584,7 +1578,7 @@ jr_000_0a86::
 	and a                                         ; $0a89: $a7
 	jr z, jr_000_0aa2                             ; $0a8a: $28 $16
 
-	ld hl, wC000                                  ; $0a8c: $21 $00 $c0
+	ld hl, WORK_RAM                                  ; $0a8c: $21 $00 $c0
 	ld de, wC010                                  ; $0a8f: $11 $10 $c0
 	ld b, $04                                     ; $0a92: $06 $04
 
@@ -1637,15 +1631,15 @@ Jump_000_0ab1::
 
 jr_000_0ac6::
 	ld a, $80                                     ; $0ac6: $3e $80
-	call Call_000_1259                            ; $0ac8: $cd $59 $12
+	call SetSpriteId                            ; $0ac8: $cd $59 $12
 	ld hl, wC012                                  ; $0acb: $21 $12 $c0
 	ld a, $a4                                     ; $0ace: $3e $a4
-	call Call_000_1259                            ; $0ad0: $cd $59 $12
+	call SetSpriteId                            ; $0ad0: $cd $59 $12
 
 jr_000_0ad3::
 	ld hl, wC020                                  ; $0ad3: $21 $20 $c0
 	ld a, [wGameplayType]                         ; $0ad6: $fa $ec $c2
-	cp $02                                        ; $0ad9: $fe $02
+	cp G_EDITOR                                   ; $0ad9: $fe $02
 	jr z, jr_000_0ae9                             ; $0adb: $28 $0c
 
 	xor a                                         ; $0add: $af
@@ -1716,7 +1710,7 @@ jr_000_0b29::
 
 
 Call_000_0b2a::
-	ld hl, wC000                                  ; $0b2a: $21 $00 $c0
+	ld hl, WORK_RAM                                  ; $0b2a: $21 $00 $c0
 	ld a, [wTileSize]                                 ; $0b2d: $fa $d1 $c0
 	ld c, a                                       ; $0b30: $4f
 	jr jr_000_0afc                                ; $0b31: $18 $c9
@@ -1811,7 +1805,7 @@ jr_000_0bce::
 	ld [wC0EE], a                                 ; $0bd2: $ea $ee $c0
 	call $0e8f                                    ; $0bd5: $cd $8f $0e
 	ld a, [wGameplayType]                         ; $0bd8: $fa $ec $c2
-	cp $02                                        ; $0bdb: $fe $02
+	cp G_EDITOR                                        ; $0bdb: $fe $02
 	ret z                                         ; $0bdd: $c8
 
 	call Call_000_0dc9                            ; $0bde: $cd $c9 $0d
@@ -1905,7 +1899,7 @@ jr_000_0c2a::
 	jr nz, jr_000_0c22                            ; $0c5b: $20 $c5
 
 	ld a, [wGameplayType]                         ; $0c5d: $fa $ec $c2
-	cp $02                                        ; $0c60: $fe $02
+	cp G_EDITOR                                        ; $0c60: $fe $02
 	jr z, jr_000_0c7e                             ; $0c62: $28 $1a
 
 	ld a, [wC2EE]                                 ; $0c64: $fa $ee $c2
@@ -1987,7 +1981,7 @@ jr_000_0cc0::
 
 Jump_000_0cc5::
 	ld a, [wGameplayType]                         ; $0cc5: $fa $ec $c2
-	cp $02                                        ; $0cc8: $fe $02
+	cp G_EDITOR                                        ; $0cc8: $fe $02
 	ret z                                         ; $0cca: $c8
 
 	ld a, [wC2ED]                                 ; $0ccb: $fa $ed $c2
@@ -2554,19 +2548,18 @@ jr_000_1004::
 	dec a                                         ; $1008: $3d
 	ld [wC10A], a                                 ; $1009: $ea $0a $c1
 	dec b                                         ; $100c: $05
-	jr nz, jr_000_0ff3                            ; $100d: $20 $e4
-
+	 jr nz, jr_000_0ff3                           ; $100d: $20 $e4
 	ret                                           ; $100f: $c9
 
-
-Call_000_1010::
+; Handles logic for the map editor
+RunEditor::
 	call Call_000_108f                            ; $1010: $cd $8f $10
-	call Call_000_121f                            ; $1013: $cd $1f $12
-	call Call_000_1264                            ; $1016: $cd $64 $12
+	call ChangeBlock                            ; $1013: $cd $1f $12
+	call Call_000_1264                            ; ?? Possibly related to the animation
 	call Call_000_1236                            ; $1019: $cd $36 $12
-	ldh a, [hKeys]                                  ; $101c: $f0 $8b
-	and $08                                       ; $101e: $e6 $08
-	ret z                                         ; $1020: $c8
+	ldh a, [hKeys]                                ; 
+	and K_START                                   ; Quit routine if Start was not pressed
+	 ret z                                        ; 
 
 	ld a, [wC020]                                 ; $1021: $fa $20 $c0
 	ldh [$8d], a                                  ; $1024: $e0 $8d
@@ -2643,7 +2636,7 @@ Call_000_108f::
 	ld [wC0C2], a                                 ; $10af: $ea $c2 $c0
 	ld a, [wC0C5]                                 ; $10b2: $fa $c5 $c0
 	ld [wC0C3], a                                 ; $10b5: $ea $c3 $c0
-	ld a, [wTileSize]                                 ; $10b8: $fa $d1 $c0
+	ld a, [wTileSize]                             ; $10b8: $fa $d1 $c0
 	ld [wC0CF], a                                 ; $10bb: $ea $cf $c0
 
 jr_000_10be::
@@ -2654,9 +2647,9 @@ jr_000_10be::
 
 
 Call_000_10c8::
-	ld hl, wC000                                  ; $10c8: $21 $00 $c0
+	ld hl, WORK_RAM                                  ; $10c8: $21 $00 $c0
 	ld a, [wGameplayType]                         ; $10cb: $fa $ec $c2
-	cp $02                                        ; $10ce: $fe $02
+	cp G_EDITOR                                        ; $10ce: $fe $02
 	jr nz, jr_000_10d5                            ; $10d0: $20 $03
 
 	ld hl, wC020                                  ; $10d2: $21 $20 $c0
@@ -2898,17 +2891,18 @@ Call_000_1213::
 	jp Jump_000_2169                              ; $121c: $c3 $69 $21
 
 
-Call_000_121f::
-	ldh a, [hKeys]                                  ; $121f: $f0 $8b
-	and $02                                       ; $1221: $e6 $02
-	ret z                                         ; $1223: $c8
+; Check if the current block (the cursor) in the editor should be changed
+ChangeBlock::
+	ldh a, [hKeys]                                ; $121f: $f0 $8b
+	and K_B                                       ; Check if B was pressed
+	 ret z                                        ; Quit if not
 
-	ld a, [wC0D3]                                 ; $1224: $fa $d3 $c0
-	inc a                                         ; $1227: $3c
-	and $03                                       ; $1228: $e6 $03
-	ld [wC0D3], a                                 ; $122a: $ea $d3 $c0
+	ld a, [wCurBlock]                             ; 
+	inc a                                         ; Switch to next block
+	and $03                                       ; Wrap if >= 4
+	ld [wCurBlock], a                             ; 
 	call Call_000_1295                            ; $122d: $cd $95 $12
-	call Jump_000_1242                            ; $1230: $cd $42 $12
+	call DrawEditorBlock                          ; $1230: $cd $42 $12
 	call Call_000_1295                            ; $1233: $cd $95 $12
 
 Call_000_1236::
@@ -2923,23 +2917,27 @@ jr_000_123b::
 	ret                                           ; $1241: $c9
 
 
-Jump_000_1242::
+; Possibly related to swapping out the tile in the editor (it animates between
+; a solid tile and the brick you want to place).
+DrawEditorBlock::
 	ld hl, $04e9                                  ; $1242: $21 $e9 $04
-	ld a, [wTileSize]                                 ; $1245: $fa $d1 $c0
+	ld a, [wTileSize]                             ; $1245: $fa $d1 $c0
 	cp $08                                        ; $1248: $fe $08
-	jr nz, jr_000_124f                            ; $124a: $20 $03
-
+	 jr nz, .skip                                 ; $124a: $20 $03
 	ld hl, $04ee                                  ; $124c: $21 $ee $04
-
-jr_000_124f::
+.skip::
 	ld a, [wC0D3]                                 ; $124f: $fa $d3 $c0
 	ld e, a                                       ; $1252: $5f
 	call Jump_000_216e                            ; $1253: $cd $6e $21
 	ld hl, wC022                                  ; $1256: $21 $22 $c0
 
-Call_000_1259::
+; Sets the sprite ID in $C0XX (OAM entries that are copied over via DMA
+; during VBlank)
+; Input:
+;  hl = address of first tile number offset in OAM buffer (start of OAM entry + 2)
+;  a = first sprite id (in the event that it's a 16x16 sprite)
+SetSpriteId::
 	ld b, $04                                     ; $1259: $06 $04
-
 jr_000_125b::
 	ld [hl+], a                                   ; $125b: $22
 	inc a                                         ; $125c: $3c
@@ -2947,20 +2945,16 @@ jr_000_125b::
 	inc hl                                        ; $125e: $23
 	inc hl                                        ; $125f: $23
 	dec b                                         ; $1260: $05
-	jr nz, jr_000_125b                            ; $1261: $20 $f8
-
+	 jr nz, jr_000_125b                           ; $1261: $20 $f8
 	ret                                           ; $1263: $c9
 
 
 Call_000_1264::
-	ld a, [wC0A4]                                 ; $1264: $fa $a4 $c0
-	and $20                                       ; $1267: $e6 $20
-	jr nz, jr_000_126e                            ; $1269: $20 $03
-
-	jp Jump_000_1242                              ; $126b: $c3 $42 $12
-
-
-jr_000_126e::
+	ld a, [wFrameCounter]                         ; $1264: $fa $a4 $c0
+	and $20                                       ; Swap the tile shown every 32 frames 
+	 jr nz, .drawBlockCursor                      ; Show black box
+	jp DrawEditorBlock                            ; .. or the current block
+.drawBlockCursor::
 	ld hl, wC022                                  ; $126e: $21 $22 $c0
 	ld b, $04                                     ; $1271: $06 $04
 	ld a, $c6                                     ; $1273: $3e $c6
@@ -2999,27 +2993,27 @@ Call_000_1295::
 	push de                                       ; $1297: $d5
 	push hl                                       ; $1298: $e5
 	xor a                                         ; $1299: $af
-	ld [wTimerFrames], a                                 ; $129a: $ea $ef $c0
+	ld [wTimerFrames], a                          ; $129a: $ea $ef $c0
 	ld [wC0F0], a                                 ; $129d: $ea $f0 $c0
 
-jr_000_12a0::
-	ldh a, [$91]                                  ; $12a0: $f0 $91
+.waitVBlank::
+	ldh a, [hVBlankState]                         ; $12a0: $f0 $91
 	and a                                         ; $12a2: $a7
-	jr z, jr_000_12a0                             ; $12a3: $28 $fb
+	 jr z, .waitVBlank                            ; $12a3: $28 $fb
 
-	ld a, [wTimerFrames]                                 ; $12a5: $fa $ef $c0
+	ld a, [wTimerFrames]                          ; $12a5: $fa $ef $c0
 	inc a                                         ; $12a8: $3c
-	ld [wTimerFrames], a                                 ; $12a9: $ea $ef $c0
+	ld [wTimerFrames], a                          ; $12a9: $ea $ef $c0
 	cp $ff                                        ; $12ac: $fe $ff
-	jr nz, jr_000_12a0                            ; $12ae: $20 $f0
+	 jr nz, .waitVBlank                           ; $12ae: $20 $f0
 
 	xor a                                         ; $12b0: $af
-	ld [wTimerFrames], a                                 ; $12b1: $ea $ef $c0
+	ld [wTimerFrames], a                          ; $12b1: $ea $ef $c0
 	ld a, [wC0F0]                                 ; $12b4: $fa $f0 $c0
 	inc a                                         ; $12b7: $3c
 	ld [wC0F0], a                                 ; $12b8: $ea $f0 $c0
 	cp $18                                        ; $12bb: $fe $18
-	jr nz, jr_000_12a0                            ; $12bd: $20 $e1
+	 jr nz, .waitVBlank                           ; $12bd: $20 $e1
 
 	pop hl                                        ; $12bf: $e1
 	pop de                                        ; $12c0: $d1
@@ -3045,7 +3039,7 @@ Call_000_12ce::
 
 Call_000_12db::
 	ld a, [wGameplayType]                         ; $12db: $fa $ec $c2
-	cp $02                                        ; $12de: $fe $02
+	cp G_EDITOR                                        ; $12de: $fe $02
 	ret nz                                        ; $12e0: $c0
 
 	ld hl, wC023                                  ; $12e1: $21 $23 $c0
@@ -3210,7 +3204,7 @@ Call_000_13de::
 	and a                                         ; $13e1: $a7
 	ret z                                         ; $13e2: $c8
 
-	ld a, [wC0A4]                                 ; $13e3: $fa $a4 $c0
+	ld a, [wFrameCounter]                                 ; $13e3: $fa $a4 $c0
 	and $01                                       ; $13e6: $e6 $01
 	ret nz                                        ; $13e8: $c0
 
@@ -5492,13 +5486,21 @@ Jump_000_2169::
 	ret                                           ; $216d: $c9
 
 
+; Adds e to hl and puts the value into a
+; Input:
+;  hl = base address
+;  e = offset
+; Output:
+;  a = value at hl + e
+; Destroys:
+;  d = set to 0
 Jump_000_216e::
 	push hl                                       ; $216e: $e5
-	ld d, $00                                     ; $216f: $16 $00
-	add hl, de                                    ; $2171: $19
-	ld a, [hl]                                    ; $2172: $7e
-	pop hl                                        ; $2173: $e1
-	ret                                           ; $2174: $c9
+	ld d, $00                                     ; Clear out upper byte of de
+	add hl, de                                    ; Add offset
+	ld a, [hl]                                    ; Grab value
+	pop hl                                        ; Restore hl
+	ret                                           ; 
 
 
 Call_000_2175::
@@ -6850,7 +6852,7 @@ jr_000_2854::
 	call Call_000_2c11                            ; $285a: $cd $11 $2c
 
 jr_000_285d::
-	ld hl, wC000                                  ; $285d: $21 $00 $c0
+	ld hl, WORK_RAM                                  ; $285d: $21 $00 $c0
 	ld de, $789d                                  ; $2860: $11 $9d $78
 	call Call_000_2c11                            ; $2863: $cd $11 $2c
 	ld a, [wC120]                                 ; $2866: $fa $20 $c1
@@ -6897,7 +6899,7 @@ jr_000_28b0::
 	ld a, $a4                                     ; $28b0: $3e $a4
 
 jr_000_28b2::
-	call Call_000_1259                            ; $28b2: $cd $59 $12
+	call SetSpriteId                            ; $28b2: $cd $59 $12
 	ld hl, wC090                                  ; $28b5: $21 $90 $c0
 	ld a, [wC120]                                 ; $28b8: $fa $20 $c1
 	sub $08                                       ; $28bb: $d6 $08
@@ -6929,7 +6931,7 @@ jr_000_28d9::
 jr_000_28df::
 	ld hl, wC092                                  ; $28df: $21 $92 $c0
 	ld a, $e8                                     ; $28e2: $3e $e8
-	call Call_000_1259                            ; $28e4: $cd $59 $12
+	call SetSpriteId                            ; $28e4: $cd $59 $12
 
 jr_000_28e7::
 	xor a                                         ; $28e7: $af
@@ -6945,7 +6947,7 @@ jr_000_28e7::
 	ld [wC384], a                                 ; $2900: $ea $84 $c3
 
 Jump_000_2903::
-	ld a, [wC0A4]                                 ; $2903: $fa $a4 $c0
+	ld a, [wFrameCounter]                                 ; $2903: $fa $a4 $c0
 	and $01                                       ; $2906: $e6 $01
 	ret nz                                        ; $2908: $c0
 
@@ -6982,7 +6984,7 @@ jr_000_293b::
 	ld de, $786d                                  ; $293b: $11 $6d $78
 
 jr_000_293e::
-	ld hl, wC000                                  ; $293e: $21 $00 $c0
+	ld hl, WORK_RAM                                  ; $293e: $21 $00 $c0
 	ld a, $f0                                     ; Disable arrow keys
 	ldh [hKeys], a                                ; $2943: $e0 $8b
 	call Call_000_2be3                            ; $2945: $cd $e3 $2b
@@ -7023,7 +7025,7 @@ jr_000_296d::
 	ld [wC137], a                                 ; $2984: $ea $37 $c1
 	ld e, a                                       ; $2987: $5f
 	ld d, $00                                     ; $2988: $16 $00
-	ld hl, wC000                                  ; $298a: $21 $00 $c0
+	ld hl, WORK_RAM                                  ; $298a: $21 $00 $c0
 	add hl, de                                    ; $298d: $19
 	pop de                                        ; $298e: $d1
 	ld a, [wC139]                                 ; $298f: $fa $39 $c1
@@ -7080,7 +7082,7 @@ Jump_000_29b9::
 	ld [wC139], a                                 ; $29de: $ea $39 $c1
 	ld hl, wC002                                  ; $29e1: $21 $02 $c0
 	ld a, $80                                     ; $29e4: $3e $80
-	call Call_000_1259                            ; $29e6: $cd $59 $12
+	call SetSpriteId                            ; $29e6: $cd $59 $12
 	call Call_000_0663                            ; $29e9: $cd $63 $06
 	call Call_000_2c04                            ; $29ec: $cd $04 $2c
 	ld hl, wC080                                  ; $29ef: $21 $80 $c0
@@ -7109,7 +7111,7 @@ jr_000_29fb::
 	call Call_000_2c11                            ; $2a1c: $cd $11 $2c
 	ld hl, wC032                                  ; $2a1f: $21 $32 $c0
 	ld a, $e4                                     ; $2a22: $3e $e4
-	call Call_000_1259                            ; $2a24: $cd $59 $12
+	call SetSpriteId                            ; $2a24: $cd $59 $12
 	ld a, [wC120]                                 ; $2a27: $fa $20 $c1
 	cp $02                                        ; $2a2a: $fe $02
 	jr nz, jr_000_2a36                            ; $2a2c: $20 $08
@@ -7135,7 +7137,7 @@ jr_000_2a39::
 	call Call_000_0663                            ; $2a4b: $cd $63 $06
 	ld hl, wC002                                  ; $2a4e: $21 $02 $c0
 	ld a, $c8                                     ; $2a51: $3e $c8
-	call Call_000_1259                            ; $2a53: $cd $59 $12
+	call SetSpriteId                            ; $2a53: $cd $59 $12
 	ld a, $78                                     ; $2a56: $3e $78
 	ld [wC030], a                                 ; $2a58: $ea $30 $c0
 	ld a, $30                                     ; $2a5b: $3e $30
@@ -7147,7 +7149,7 @@ jr_000_2a65::
 	call Call_000_2c04                            ; $2a65: $cd $04 $2c
 	ld hl, wC092                                  ; $2a68: $21 $92 $c0
 	ld a, $c4                                     ; $2a6b: $3e $c4
-	call Call_000_1259                            ; $2a6d: $cd $59 $12
+	call SetSpriteId                            ; $2a6d: $cd $59 $12
 	call Call_000_2c04                            ; $2a70: $cd $04 $2c
 	ld a, [wC138]                                 ; $2a73: $fa $38 $c1
 	cp $03                                        ; $2a76: $fe $03
@@ -7160,11 +7162,11 @@ jr_000_2a7f::
 	call Call_000_0663                            ; $2a7f: $cd $63 $06
 	ld hl, wC002                                  ; $2a82: $21 $02 $c0
 	ld a, $b8                                     ; $2a85: $3e $b8
-	call Call_000_1259                            ; $2a87: $cd $59 $12
+	call SetSpriteId                            ; $2a87: $cd $59 $12
 	call Call_000_2c04                            ; $2a8a: $cd $04 $2c
 	ld hl, wC002                                  ; $2a8d: $21 $02 $c0
 	ld a, $b4                                     ; $2a90: $3e $b4
-	call Call_000_1259                            ; $2a92: $cd $59 $12
+	call SetSpriteId                            ; $2a92: $cd $59 $12
 	ld hl, wC080                                  ; $2a95: $21 $80 $c0
 	ld de, $78a2                                  ; $2a98: $11 $a2 $78
 	call Call_000_2c11                            ; $2a9b: $cd $11 $2c
@@ -7236,7 +7238,7 @@ Jump_000_2af5::
 	call Call_000_0663                            ; $2afd: $cd $63 $06
 	ld hl, wC002                                  ; $2b00: $21 $02 $c0
 	ld a, $ea                                     ; $2b03: $3e $ea
-	call Call_000_1259                            ; $2b05: $cd $59 $12
+	call SetSpriteId                            ; $2b05: $cd $59 $12
 	ld a, $78                                     ; $2b08: $3e $78
 	ld [wC030], a                                 ; $2b0a: $ea $30 $c0
 	ld a, $50                                     ; $2b0d: $3e $50
@@ -7245,7 +7247,7 @@ Jump_000_2af5::
 	ld [wC032], a                                 ; $2b14: $ea $32 $c0
 	ld hl, wC092                                  ; $2b17: $21 $92 $c0
 	ld a, $bc                                     ; $2b1a: $3e $bc
-	call Call_000_1259                            ; $2b1c: $cd $59 $12
+	call SetSpriteId                            ; $2b1c: $cd $59 $12
 	call Call_000_2c04                            ; $2b1f: $cd $04 $2c
 	ld hl, wC080                                  ; $2b22: $21 $80 $c0
 	ld de, $78a7                                  ; $2b25: $11 $a7 $78
@@ -7260,7 +7262,7 @@ Jump_000_2b31::
 	call Call_000_2736                            ; $2b34: $cd $36 $27
 	ld hl, wC082                                  ; $2b37: $21 $82 $c0
 	ld a, $d4                                     ; $2b3a: $3e $d4
-	call Call_000_1259                            ; $2b3c: $cd $59 $12
+	call SetSpriteId                            ; $2b3c: $cd $59 $12
 	ld a, $d4                                     ; $2b3f: $3e $d4
 	ld [wC032], a                                 ; $2b41: $ea $32 $c0
 	call Call_000_0650                            ; $2b44: $cd $50 $06
@@ -7283,10 +7285,10 @@ jr_000_2b64::
 	call Call_000_2c04                            ; $2b69: $cd $04 $2c
 	ld hl, wC092                                  ; $2b6c: $21 $92 $c0
 	ld a, $d4                                     ; $2b6f: $3e $d4
-	call Call_000_1259                            ; $2b71: $cd $59 $12
+	call SetSpriteId                            ; $2b71: $cd $59 $12
 	pop af                                        ; $2b74: $f1
 	ld hl, wC002                                  ; $2b75: $21 $02 $c0
-	call Call_000_1259                            ; $2b78: $cd $59 $12
+	call SetSpriteId                            ; $2b78: $cd $59 $12
 	push af                                       ; $2b7b: $f5
 	ld a, [wC133]                                 ; $2b7c: $fa $33 $c1
 	ld [wC096], a                                 ; $2b7f: $ea $96 $c0
@@ -7422,22 +7424,22 @@ Call_000_2c35::
 	ld [wTileSize], a                                 ; $2c40: $ea $d1 $c0
 	ld hl, wC092                                  ; $2c43: $21 $92 $c0
 	ld a, $bc                                     ; $2c46: $3e $bc
-	call Call_000_1259                            ; $2c48: $cd $59 $12
+	call SetSpriteId                            ; $2c48: $cd $59 $12
 	ld hl, wC082                                  ; $2c4b: $21 $82 $c0
 	ld a, $cc                                     ; $2c4e: $3e $cc
-	call Call_000_1259                            ; $2c50: $cd $59 $12
+	call SetSpriteId                            ; $2c50: $cd $59 $12
 	ld hl, wC052                                  ; $2c53: $21 $52 $c0
 	ld a, $a4                                     ; $2c56: $3e $a4
-	call Call_000_1259                            ; $2c58: $cd $59 $12
+	call SetSpriteId                            ; $2c58: $cd $59 $12
 	ld hl, wC032                                  ; $2c5b: $21 $32 $c0
 	ld a, $d4                                     ; $2c5e: $3e $d4
-	call Call_000_1259                            ; $2c60: $cd $59 $12
+	call SetSpriteId                            ; $2c60: $cd $59 $12
 	ld hl, wC042                                  ; $2c63: $21 $42 $c0
 	ld a, $d4                                     ; $2c66: $3e $d4
-	call Call_000_1259                            ; $2c68: $cd $59 $12
+	call SetSpriteId                            ; $2c68: $cd $59 $12
 	ld hl, wC052                                  ; $2c6b: $21 $52 $c0
 	ld a, $d4                                     ; $2c6e: $3e $d4
-	call Call_000_1259                            ; $2c70: $cd $59 $12
+	call SetSpriteId                            ; $2c70: $cd $59 $12
 	ld hl, wC132                                  ; $2c73: $21 $32 $c1
 	ld bc, $0009                                  ; $2c76: $01 $09 $00
 	call Call_000_2143                            ; $2c79: $cd $43 $21
@@ -7507,13 +7509,13 @@ Call_000_2cbd::
 	ld a, $d4                                     ; $2d06: $3e $d4
 
 Call_000_2d08::
-	call Call_000_1259                            ; $2d08: $cd $59 $12
+	call SetSpriteId                            ; $2d08: $cd $59 $12
 	ld hl, wC042                                  ; $2d0b: $21 $42 $c0
 	ld a, $d4                                     ; $2d0e: $3e $d4
-	call Call_000_1259                            ; $2d10: $cd $59 $12
+	call SetSpriteId                            ; $2d10: $cd $59 $12
 	ld hl, wC052                                  ; $2d13: $21 $52 $c0
 	ld a, $d4                                     ; $2d16: $3e $d4
-	call Call_000_1259                            ; $2d18: $cd $59 $12
+	call SetSpriteId                            ; $2d18: $cd $59 $12
 	ret                                           ; $2d1b: $c9
 
 

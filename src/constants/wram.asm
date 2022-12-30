@@ -2,7 +2,9 @@ section "WRAM Bank0", wram0[$c000]
 
 wram0Section EQU $C000
 
-wC000:: ; C000
+; OAM buffer = $C000-$C09F
+; wOAM0
+WORK_RAM:: ; C000
 	ds 1
 wC001:: ; C001
 	ds 1
@@ -10,6 +12,8 @@ wC002:: ; C002
 	ds 1
 wC003:: ; C003
 	ds 1
+
+; wOAM1
 wC004:: ; C004
 	ds 1
 wC005:: ; C005
@@ -18,6 +22,8 @@ wC006:: ; C006
 	ds 1
 wC007:: ; C007
 	ds 1
+
+; wOAM2
 wC008:: ; C008
 	ds 1
 wC009:: ; C009
@@ -26,6 +32,8 @@ wC00A:: ; C00A
 	ds 1
 wC00B:: ; C00B
 	ds 1
+
+; wOAM3
 wC00C:: ; C00C
 	ds 1
 wC00D:: ; C00D
@@ -34,6 +42,8 @@ wC00E:: ; C00E
 	ds 1
 wC00F:: ; C00F
 	ds 1
+
+; wOAM4
 wC010:: ; C010
 	ds 1
 wC011:: ; C011
@@ -42,6 +52,8 @@ wC012:: ; C012
 	ds 1
 wC013:: ; C013
 	ds 1
+
+; wOAM5
 wC014:: ; C014
 	ds 1
 wC015:: ; C015
@@ -50,6 +62,8 @@ wC016:: ; C016
 	ds 1
 wC017:: ; C017
 	ds 1
+
+; wOAM6
 wC018:: ; C018
 	ds 1
 wC019:: ; C019
@@ -58,6 +72,8 @@ wC01A:: ; C01A
 	ds 1
 wC01B:: ; C01B
 	ds 1
+
+; wOAM7
 wC01C:: ; C01C
 	ds 1
 wC01D:: ; C01D
@@ -66,6 +82,8 @@ wC01E:: ; C01E
 	ds 1
 wC01F:: ; C01F
 	ds 1
+
+; wOAM8
 wC020:: ; C020
 	ds 1
 wC021:: ; C021
@@ -74,6 +92,8 @@ wC022:: ; C022
 	ds 1
 wC023:: ; C023
 	ds 1
+
+; wOAM9
 wC024:: ; C024
 	ds 1
 wC025:: ; C025
@@ -82,6 +102,8 @@ wC026:: ; C026
 	ds 1
 wC027:: ; C027
 	ds 1
+
+; wOAM10
 wC028:: ; C028
 	ds 1
 wC029:: ; C029
@@ -90,6 +112,8 @@ wC02A:: ; C02A
 	ds 1
 wC02B:: ; C02B
 	ds 1
+
+; wOAM11
 wC02C:: ; C02C
 	ds 1
 wC02D:: ; C02D
@@ -98,6 +122,8 @@ wC02E:: ; C02E
 	ds 1
 wC02F:: ; C02F
 	ds 1
+
+; wOAM12
 wC030:: ; C030
 	ds 1
 wC031:: ; C031
@@ -322,6 +348,7 @@ wC09E:: ; C09E
 	ds 1
 wC09F:: ; C09F
 	ds 1
+; Start of non-OAM data
 wC0A0:: ; C0A0
 	ds 1
 wC0A1:: ; C0A1
@@ -330,7 +357,7 @@ wC0A2:: ; C0A2
 	ds 1
 wC0A3:: ; C0A3
 	ds 1
-wC0A4:: ; C0A4
+wFrameCounter:: ; C0A4 - incremented each frame in the main game loop
 	ds 1
 wC0A5:: ; C0A5
 	ds 1
@@ -398,6 +425,7 @@ wTileSize:: ; C0D1 - Size of tile to draw, value should be 8 or 16
 	ds 1
 wC0D2:: ; C0D2
 	ds 1
+wCurBlock:: ; Currently selected block in the editor
 wC0D3:: ; C0D3
 	ds 1
 wC0D4:: ; C0D4
