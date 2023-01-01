@@ -36,7 +36,7 @@ Start::
 	dec b                                         ; $0195: $05
 	 jr nz, .loop                                 ; $0196: $20 $f8
 
-Jump_000_0198::
+PrepareGame::
 	call Call_000_0c0d                            ; $0198: $cd $0d $0c
 	ld a, IEF_TIMER                               ; 
 	ldh [rIE], a                                  ; Enable timer interrupts
@@ -122,7 +122,7 @@ GameLoop::
 	 jr z, Editor                                 ; 
 	cp $03                                        ; 3 = 
 	 jr z, jr_000_028d                            ; 
-	cp $04                                        ; 4 = Title screen
+	cp G_TITLE                                        ; 4 = Title screen
 	 jr z, TitleScreen                            ; Shows the title screen
 	cp $05                                        ; 5 = 
 	 jr z, jr_000_0292                            ; 
@@ -133,13 +133,13 @@ GameLoop::
 	jr z, jr_000_02a3                             ; $0256: $28 $4b
 
 	call Jump_000_0340                            ; $0258: $cd $40 $03
-	ld a, [wKeyState]                                 ; $025b: $fa $fd $c0
-	and $09                                       ; $025e: $e6 $09
+	ld a, [wKeyState]                             ; $025b: $fa $fd $c0
+	and $09                                       ; A or Start
 	jr nz, Jump_000_0277                          ; $0260: $20 $15
 
-	ldh a, [hKeys]                                  ; $0262: $f0 $8b
-	and $08                                       ; $0264: $e6 $08
-	jp z, Jump_000_0277                           ; $0266: $ca $77 $02
+	ldh a, [hKeys]                                ; $0262: $f0 $8b
+	and K_START                                   ; $0264: $e6 $08
+	 jp z, Jump_000_0277                          ; $0266: $ca $77 $02
 
 	ld a, $30                                     ; $0269: $3e $30
 	ld [wGameplayType], a                         ; $026b: $ea $ec $c2
@@ -175,7 +175,7 @@ jr_000_0292::
 jr_000_0295::
 	ld a, [wC0FE]                                 ; $0295: $fa $fe $c0
 	and a                                         ; $0298: $a7
-	 jp nz, Jump_000_0198                         ; $0299: $c2 $98 $01
+	 jp nz, PrepareGame                         ; $0299: $c2 $98 $01
 
 	jr AwaitVBlank                                ; $029c: $18 $56
 
@@ -189,9 +189,9 @@ jr_000_02a3::
 
 TitleScreen::
 	call Call_000_13de                            ; $02a8: $cd $de $13
-	ld a, [wHasWon]                                 ; $02ab: $fa $a3 $c0
-	and a                                         ; $02ae: $a7
-	 jr nz, AwaitVBlank                           ; $02af: $20 $43
+	ld a, [wHasWon]                               ; Check if player has won
+	and a                                         ; a > 0 = player has won
+	 jr nz, AwaitVBlank                           ; If player has won, we don't handle any key presses
 
 	ldh a, [hKeys]                                ; Check if start was pressed
 	cp K_START                                    ; 
@@ -200,18 +200,17 @@ TitleScreen::
 	    ld [wGameplayType], a                     ; $02b9: $ea $ec $c2
 	    ld a, $08                                 ; $02bc: $3e $08
 	    ld [wC384], a                             ; $02be: $ea $84 $c3
-	    jp Jump_000_0198                          ; $02c1: $c3 $98 $01
+	    jp PrepareGame                          ; $02c1: $c3 $98 $01
 .checkCreditKeys::
 	ldh a, [hKeys]                                ; Check for "secret" keypress
 	cp K_A + K_B + K_SELECT + K_UP                ; A + B + Select + Up
-	 jr nz, jr_000_02d8                           ; $02c8: $20 $0e
-	ld [wHasWon], a                                 ; $02ca: $ea $a3 $c0
+	 jr nz, jr_000_02d8                           ; 
+	ld [wHasWon], a                               ; Set wHasWon to a value > 0
 Jump_000_02cd::
-	ld a, $04                                     ; $02cd: $3e $04
-	ld [wGameplayType], a                         ; $02cf: $ea $ec $c2
+	ld a, G_TITLE                                 ; Set game mode to G_TITLE
+	ld [wGameplayType], a                         ; 
 	ld [wC0D7], a                                 ; $02d2: $ea $d7 $c0
-	jp Jump_000_0198                              ; $02d5: $c3 $98 $01
-
+	jp PrepareGame                              ; $02d5: $c3 $98 $01
 
 jr_000_02d8::
 	ld a, [wTimerSeconds]                                 ; $02d8: $fa $f2 $c0
@@ -226,7 +225,7 @@ jr_000_02d8::
 	ld [wGameplayType], a                         ; $02e9: $ea $ec $c2
 	ld a, $18                                     ; $02ec: $3e $18
 	ld [wC2D9], a                                 ; $02ee: $ea $d9 $c2
-	jp Jump_000_0198                              ; $02f1: $c3 $98 $01
+	jp PrepareGame                              ; $02f1: $c3 $98 $01
 
 
 AwaitVBlank::
@@ -748,14 +747,14 @@ jr_000_05b7::
 Jump_000_05c5::
 	ld a, $70                                     ; $05c5: $3e $70
 	ld [wGameplayType], a                         ; $05c7: $ea $ec $c2
-	jp Jump_000_0198                              ; $05ca: $c3 $98 $01
+	jp PrepareGame                              ; $05ca: $c3 $98 $01
 
 
 jr_000_05cd::
 	call Call_000_05d8                            ; $05cd: $cd $d8 $05
 	ld a, $40                                     ; $05d0: $3e $40
 	ld [wGameplayType], a                         ; $05d2: $ea $ec $c2
-	jp Jump_000_0198                              ; $05d5: $c3 $98 $01
+	jp PrepareGame                              ; $05d5: $c3 $98 $01
 
 
 Call_000_05d8::
@@ -795,7 +794,7 @@ jr_000_05ea::
 	ld [wC0E9], a                                 ; $0610: $ea $e9 $c0
 	ld a, $06                                     ; $0613: $3e $06
 	ld [wGameplayType], a                         ; $0615: $ea $ec $c2
-	jp Jump_000_0198                              ; $0618: $c3 $98 $01
+	jp PrepareGame                              ; $0618: $c3 $98 $01
 
 
 jr_000_061b::
@@ -3643,11 +3642,11 @@ jr_000_162d::
 	and a                                         ; $1630: $a7
 	jr z, jr_000_165f                             ; $1631: $28 $2c
 
-	ld a, $04                                     ; $1633: $3e $04
+	ld a, G_TITLE                                     ; $1633: $3e $04
 	ld [wGameplayType], a                         ; $1635: $ea $ec $c2
 	xor a                                         ; $1638: $af
 	ld [wC2ED], a                                 ; $1639: $ea $ed $c2
-	jp Jump_000_0198                              ; $163c: $c3 $98 $01
+	jp PrepareGame                              ; $163c: $c3 $98 $01
 
 
 jr_000_163f::
@@ -3718,7 +3717,7 @@ jr_000_169c::
 	ld [wGameplayType], a                         ; $16a4: $ea $ec $c2
 	ld a, $08                                     ; $16a7: $3e $08
 	ld [wC384], a                                 ; $16a9: $ea $84 $c3
-	jp Jump_000_0198                              ; $16ac: $c3 $98 $01
+	jp PrepareGame                              ; $16ac: $c3 $98 $01
 
 
 Call_000_16af::
@@ -3775,7 +3774,7 @@ jr_000_16f8::
 
 	ld a, $01                                     ; $1700: $3e $01
 	ld [wC0EE], a                                 ; $1702: $ea $ee $c0
-	jp Jump_000_0198                              ; $1705: $c3 $98 $01
+	jp PrepareGame                              ; $1705: $c3 $98 $01
 
 
 jr_000_1708::
@@ -3800,7 +3799,7 @@ jr_000_170f::
 jr_000_1726::
 	ld a, $08                                     ; $1726: $3e $08
 	ld [wC384], a                                 ; $1728: $ea $84 $c3
-	jp Jump_000_0198                              ; $172b: $c3 $98 $01
+	jp PrepareGame                              ; $172b: $c3 $98 $01
 
 
 Call_000_172e::
@@ -7206,7 +7205,7 @@ jr_000_2aca::
 	and a                                         ; $2ad7: $a7
 	jr nz, jr_000_2add                            ; $2ad8: $20 $03
 
-	jp Jump_000_0198                              ; $2ada: $c3 $98 $01
+	jp PrepareGame                              ; $2ada: $c3 $98 $01
 
 
 jr_000_2add::
@@ -7216,7 +7215,7 @@ jr_000_2add::
 	ld a, [wC120]                                 ; $2ae5: $fa $20 $c1
 	inc a                                         ; $2ae8: $3c
 	ld [wC120], a                                 ; $2ae9: $ea $20 $c1
-	jp Jump_000_0198                              ; $2aec: $c3 $98 $01
+	jp PrepareGame                              ; $2aec: $c3 $98 $01
 
 
 Jump_000_2aef::
