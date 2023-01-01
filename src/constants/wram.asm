@@ -406,8 +406,10 @@ wC09F:: ; C09F
 ; Start of non-OAM data
 wC0A0:: ; C0A0
 	ds 1
+wMoveCountL:: ; Move count takes up 2 bytes
 wC0A1:: ; C0A1
 	ds 1
+wMoveCountH:: ; High byte of move count
 wC0A2:: ; C0A2
 	ds 1
 wHasWon:: ; C0A3 - any value > 0 means player has "beaten" the game (or input the secret keypress at the title screen)
@@ -474,7 +476,7 @@ wC0CE:: ; C0CE
 	ds 1
 wC0CF:: ; C0CF
 	ds 1
-wC0D0:: ; C0D0
+wDirection:: ; C0D0 - Direction the player is facing
 	ds 1
 wTileSize:: ; C0D1 - Size of tile to draw, value should be 8 or 16
 	ds 1
@@ -531,7 +533,7 @@ wC0EB:: ; C0EB
 	ds 1
 wC0EC:: ; C0EC
 	ds 1
-wC0ED:: ; C0ED
+wSpriteFlags:: ; C0ED - OAM flags (e.g x flip)
 	ds 1
 wC0EE:: ; C0EE
 	ds 1
@@ -555,7 +557,7 @@ wVRAMPointerHigh:: ; C0F7
 	ds 1
 wVRAMPointerLow:: ; C0F8
 	ds 1
-wC0F9:: ; C0F9
+wMenuOffset:: ; C0F9 - which line of the menu to draw
 	ds 1
 wC0FA:: ; C0FA
 	ds 1
@@ -672,13 +674,14 @@ wC131:: ; C131
 wAnimationStarted:: ; Tracks whether initial animation when starting new game has been started
 wC132:: ; C132
 	ds 1
+wCurrentCharacter:: ; Tracks the current character being drawn on screen
 wC133:: ; C133
 	ds 1
 wC134:: ; C134
 	ds 1
 wC135:: ; C135
 	ds 1
-wC136:: ; C136
+wCharacter2TileId:: ; C136 - Used in the intro cutscene for the ponytail character
 	ds 1
 wC137:: ; C137
 	ds 1

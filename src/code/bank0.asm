@@ -85,8 +85,8 @@ PrepareGame::
 	ldh [rBGP], a                                 ; $01f6: $e0 $47
 	ldh [rOBP0], a                                ; $01f8: $e0 $48
 	ldh [rOBP1], a                                ; $01fa: $e0 $49
-	call DrawTitleScreen                                  ; $01fc: $cd $91 $13
-	call Call_000_12db                            ; $01ff: $cd $db $12
+	call DrawTitleScreen                          ; $01fc: $cd $91 $13
+	call Call_000_12db                            ; $01ff: $cd $db $12 - Seems related to editor
 	call Call_000_0b33                            ; $0202: $cd $33 $0b
 	call Call_000_0384                            ; $0205: $cd $84 $03
 	call Call_000_2c35                            ; $0208: $cd $35 $2c
@@ -115,31 +115,32 @@ GameLoop::
 
 	ld a, [wGameplayType]                         ; $0239: $fa $ec $c2
 	cp $01                                        ; 1 = Sample gameplay
-	 jr z, SampleGameplay                         ; Runs a little animation showing a sample of the game playing
+	 jr z, SampleGameplay                         ;   Runs a little animation showing a sample of the game playing
 	cp G_EDITOR                                   ; 2 = Map editor
 	 jr z, Editor                                 ; 
 	cp $03                                        ; 3 = 
 	 jr z, jr_000_028d                            ; 
 	cp G_TITLE                                    ; 4 = Title screen
-	 jr z, TitleScreen                            ; Shows the title screen
+	 jr z, TitleScreen                            ;   Shows the title screen
 	cp $05                                        ; 5 = 
 	 jr z, jr_000_0292                            ; 
 	cp G_GAME_INTRO                               ; 6 = Game intro that plays before actual game starts 
-	 jr z, GameIntro                              ; 
+	 jr z, GameIntro                              ;   The cutscene that runs at the start of a game
 
 	cp $08                                        ; $0254: $fe $08
 	 jr z, jr_000_02a3                            ; $0256: $28 $4b
 
 	call Jump_000_0340                            ; $0258: $cd $40 $03
 	ld a, [wKeyState]                             ; $025b: $fa $fd $c0
-	and $09                                       ; A or Start
+	and K_START | K_A                             ; A or Start
 	 jr nz, Jump_000_0277                         ; $0260: $20 $15
 
 	ldh a, [hKeys]                                ; $0262: $f0 $8b
 	and K_START                                   ; $0264: $e6 $08
 	 jp z, Jump_000_0277                          ; $0266: $ca $77 $02
 
-	ld a, $30                                     ; $0269: $3e $30
+; Pressed start during game
+	ld a, G_START_MENU                            ; $0269: $3e $30
 	ld [wGameplayType], a                         ; $026b: $ea $ec $c2
 	xor a                                         ; $026e: $af
 	ld [wC385], a                                 ; $026f: $ea $85 $c3
@@ -152,7 +153,7 @@ Jump_000_0277::
 	jr AwaitVBlank                                ; $027c: $18 $76
 
 SampleGameplay::
-	call Call_000_1616                            ; $027e: $cd $16 $16
+	call RunSampleGameplay                            ; $027e: $cd $16 $16
 	jr AwaitVBlank                                ; $0281: $18 $71
 
 Editor::
@@ -244,10 +245,10 @@ InterruptVBlank::
 	push hl                                       ; $0303: $e5
 	ld a, [wGameplayType]                         ; $0304: $fa $ec $c2
 	and $f0                                       ; $0307: $e6 $f0
-	 jr nz, .skipDMA                               ; $0309: $20 $12
+	 jr nz, .skipDMA                              ; $0309: $20 $12
 
 ; DMA routine
-	call $ff80                                    ; $030b: Run DMA routine, stored in high RAM
+	call $ff80                                    ; Run DMA routine, stored in high RAM
 	xor a                                         ; $030e: $af
 	ld [wC0F5], a                                 ; $030f: $ea $f5 $c0
 
@@ -299,7 +300,7 @@ Jump_000_0340::
 	and a                                         ; $034f: $a7
 	jr nz, jr_000_0363                            ; $0350: $20 $11
 
-	ld [wC0D0], a                                 ; $0352: $ea $d0 $c0
+	ld [wDirection], a                                 ; $0352: $ea $d0 $c0
 	ld a, $04                                     ; $0355: $3e $04
 	ld [wC385], a                                 ; $0357: $ea $85 $c3
 	ld [wC0F1], a                                 ; $035a: $ea $f1 $c0
@@ -666,17 +667,17 @@ DrawTile::
 	push af                                       ; 
 	  ld a, [wTileSize]                               ; A = tile size
 	  cp $08                                      ; If tile size == 8, we only need to draw one tile
-	   jr z, DrawTile.abort                       ; 
+	   jr z, .abort                       ; 
 	pop af                                        ; $055f: $f1
 ; Sprite 2
 	ld [hl], a                                    ; $0560: $77
 	push af                                       ; $0561: $f5
-	  ld a, $1f                                     ; $0562: $3e $1f
-	  add l                                         ; $0564: $85
-	  ld l, a                                       ; $0565: $6f
-	  ld a, h                                       ; $0566: $7c
-	  adc $00                                       ; $0567: $ce $00
-	  ld h, a                                       ; $0569: $67
+	  ld a, $1f                                   ; $0562: $3e $1f
+	  add l                                       ; $0564: $85
+	  ld l, a                                     ; $0565: $6f
+	  ld a, h                                     ; $0566: $7c
+	  adc $00                                     ; $0567: $ce $00
+	  ld h, a                                     ; $0569: $67
 	pop af                                        ; $056a: $f1
 	inc a                                         ; $056b: $3c
 ; Sprite 3
@@ -686,7 +687,7 @@ DrawTile::
 	ld [hl], a                                    ; $056e: $77
 	ret                                           ; $056f: $c9
 
-DrawTile.abort::
+.abort::
 	pop af                                        ; $0570: $f1
 	ret                                           ; $0571: $c9
 
@@ -879,7 +880,7 @@ Call_000_066f::
 	ld hl, WORK_RAM                                  ; $066f: $21 $00 $c0
 	ld a, [wTileSize]                                 ; $0672: $fa $d1 $c0
 	ld c, a                                       ; $0675: $4f
-	ld a, [wC0D0]                                 ; $0676: $fa $d0 $c0
+	ld a, [wDirection]                                 ; $0676: $fa $d0 $c0
 	cp $00                                        ; $0679: $fe $00
 	jr z, jr_000_0690                             ; $067b: $28 $13
 
@@ -1062,6 +1063,7 @@ jr_000_078d::
 
 	call Call_000_0867                            ; $079a: $cd $67 $08
 	call Call_000_0eea                            ; $079d: $cd $ea $0e
+; increase move count
 	ld a, [wC2D7]                                 ; $07a0: $fa $d7 $c2
 	add $01                                       ; $07a3: $c6 $01
 	ld [wC2D7], a                                 ; $07a5: $ea $d7 $c2
@@ -1097,6 +1099,7 @@ jr_000_07c4::
 jr_000_07da::
 	ld a, [wC0A5]                                 ; $07da: $fa $a5 $c0
 	ld [wC107], a                                 ; $07dd: $ea $07 $c1
+; decrease move count
 	ld a, [wC2D7]                                 ; $07e0: $fa $d7 $c2
 	sub $01                                       ; $07e3: $d6 $01
 	ld [wC2D7], a                                 ; $07e5: $ea $d7 $c2
@@ -1115,7 +1118,7 @@ jr_000_07f9::
 	ld hl, WORK_RAM                                  ; $07fd: $21 $00 $c0
 
 Call_000_0800::
-	ld a, [wC0D0]                                 ; $0800: $fa $d0 $c0
+	ld a, [wDirection]                                 ; $0800: $fa $d0 $c0
 	cp $00                                        ; $0803: $fe $00
 	jr z, jr_000_0818                             ; $0805: $28 $11
 
@@ -1363,14 +1366,14 @@ jr_000_0969::
 	ld a, $02                                     ; $0969: $3e $02
 
 jr_000_096b::
-	ld [wC0D0], a                                 ; $096b: $ea $d0 $c0
+	ld [wDirection], a                                 ; $096b: $ea $d0 $c0
 	xor a                                         ; $096e: $af
 	ld [wC0E1], a                                 ; $096f: $ea $e1 $c0
 	ret                                           ; $0972: $c9
 
 
 Call_000_0973::
-	ld a, [wC0D0]                                 ; $0973: $fa $d0 $c0
+	ld a, [wDirection]                                 ; $0973: $fa $d0 $c0
 	and $02                                       ; $0976: $e6 $02
 	jr z, jr_000_097f                             ; $0978: $28 $05
 
@@ -1386,7 +1389,7 @@ jr_000_0981::
 	push bc                                       ; $0983: $c5
 	ld a, c                                       ; $0984: $79
 	call Call_000_0a19                            ; $0985: $cd $19 $0a
-	ld a, [wC0D0]                                 ; $0988: $fa $d0 $c0
+	ld a, [wDirection]                                 ; $0988: $fa $d0 $c0
 	cp $01                                        ; $098b: $fe $01
 	jr z, jr_000_09a8                             ; $098d: $28 $19
 
@@ -1427,7 +1430,7 @@ jr_000_09a8::
 	ld h, a                                       ; $09c0: $67
 
 jr_000_09c1::
-	ld a, [wC0D0]                                 ; $09c1: $fa $d0 $c0
+	ld a, [wDirection]                                 ; $09c1: $fa $d0 $c0
 	cp $01                                        ; $09c4: $fe $01
 	jr z, jr_000_09ee                             ; $09c6: $28 $26
 
@@ -1507,7 +1510,7 @@ Call_000_0a32::
 	ld b, $01                                     ; $0a42: $06 $01
 
 jr_000_0a44::
-	ld a, [wC0D0]                                 ; $0a44: $fa $d0 $c0
+	ld a, [wDirection]                                 ; $0a44: $fa $d0 $c0
 	cp $00                                        ; $0a47: $fe $00
 	jr z, jr_000_0a56                             ; $0a49: $28 $0b
 
@@ -1985,31 +1988,27 @@ Jump_000_0cc5::
 
 jr_000_0cd6::
 	ld a, [wGameplayType]                         ; $0cd6: $fa $ec $c2
-	cp $06                                        ; $0cd9: $fe $06
-	jr z, jr_000_0ce0                             ; $0cdb: $28 $03
-
-	call Call_000_0db8                            ; $0cdd: $cd $b8 $0d
-
-jr_000_0ce0::
+	cp G_GAME_INTRO                               ; $0cd9: $fe $06
+	 jr z, .skip                                  ; $0cdb: $28 $03
+	    call Call_000_0db8                        ; $0cdd: $cd $b8 $0d
+.skip::
 	ld a, [wTileSize]                             ; $0ce0: $fa $d1 $c0
 	cp $10                                        ; $0ce3: $fe $10
 	 jr nz, jr_000_0d1f                           ; $0ce5: $20 $38
 
-	ld hl, $0db4                                  ; $0ce7: $21 $b4 $0d
+	ld hl, WalkingSpriteId16                      ; $0ce7: $21 $b4 $0d
 	ld a, [wGameplayType]                         ; $0cea: $fa $ec $c2
-	cp $06                                        ; $0ced: $fe $06
-	jr nz, jr_000_0cfb                            ; $0cef: $20 $0a
+	cp G_GAME_INTRO                               ; $0ced: $fe $06
+	 jr nz, jr_000_0cfb                           ; $0cef: $20 $0a
 
-	ld a, [wC133]                                 ; $0cf1: $fa $33 $c1
+	ld a, [wCurrentCharacter]                     ; $0cf1: $fa $33 $c1
 	cp $02                                        ; $0cf4: $fe $02
-	jr nz, jr_000_0cfb                            ; $0cf6: $20 $03
-
-	ld hl, wC136                                  ; $0cf8: $21 $36 $c1
-
+	 jr nz, jr_000_0cfb                           ; $0cf6: $20 $03
+	    ld hl, wCharacter2TileId                  ; Points to the tile ID of the second character on screen
 jr_000_0cfb::
-	ld a, [wC0E2]                                 ; $0cfb: $fa $e2 $c0
-	ld e, a                                       ; $0cfe: $5f
-	call AddHLEtoA                            ; $0cff: $cd $6e $21
+	ld a, [wC0E2]                                 ; Frame/offset in animation?
+	ld e, a                                       ; [hl + offset] into a
+	call AddHLEtoA                                ; 
 	ld b, a                                       ; $0d02: $47
 	ld a, [wC0F1]                                 ; $0d03: $fa $f1 $c0
 	and a                                         ; $0d06: $a7
@@ -2020,7 +2019,7 @@ jr_000_0cfb::
 	jr jr_000_0d17                                ; $0d0c: $18 $09
 
 jr_000_0d0e::
-	ld a, [wC0D0]                                 ; $0d0e: $fa $d0 $c0
+	ld a, [wDirection]                                 ; $0d0e: $fa $d0 $c0
 	and $02                                       ; $0d11: $e6 $02
 	sla a                                         ; $0d13: $cb $27
 	sla a                                         ; $0d15: $cb $27
@@ -2033,7 +2032,7 @@ jr_000_0d17::
 	jr jr_000_0d44                                ; $0d1d: $18 $25
 
 jr_000_0d1f::
-	ld hl, $0db6                                  ; $0d1f: $21 $b6 $0d
+	ld hl, WalkingSpriteId8                       ; Sprite ID in Tile memory for 8x8 walking sprite
 	ld a, [wC0E2]                                 ; $0d22: $fa $e2 $c0
 	ld e, a                                       ; $0d25: $5f
 	call AddHLEtoA                            ; $0d26: $cd $6e $21
@@ -2047,7 +2046,7 @@ jr_000_0d1f::
 	jr jr_000_0d3a                                ; $0d33: $18 $05
 
 jr_000_0d35::
-	ld a, [wC0D0]                                 ; $0d35: $fa $d0 $c0
+	ld a, [wDirection]                                 ; $0d35: $fa $d0 $c0
 	and $02                                       ; $0d38: $e6 $02
 
 jr_000_0d3a::
@@ -2059,12 +2058,12 @@ jr_000_0d3a::
 	add b                                         ; $0d43: $80
 
 jr_000_0d44::
-	ld [wC0E4], a                                 ; $0d44: $ea $e4 $c0
-	ld a, [wC0D0]                                 ; $0d47: $fa $d0 $c0
+	ld [wC0E4], a                                 ; Sprite ID for current frame?
+	ld a, [wDirection]                                 ; $0d47: $fa $d0 $c0
 	and $01                                       ; $0d4a: $e6 $01
 	jr z, jr_000_0d55                             ; $0d4c: $28 $07
 
-	ld a, [wC0D0]                                 ; $0d4e: $fa $d0 $c0
+	ld a, [wDirection]                                 ; $0d4e: $fa $d0 $c0
 	cp $01                                        ; $0d51: $fe $01
 	jr z, jr_000_0d57                             ; $0d53: $28 $02
 
@@ -2075,18 +2074,18 @@ jr_000_0d57::
 	ld c, a                                       ; $0d57: $4f
 	swap a                                        ; $0d58: $cb $37
 	sla a                                         ; $0d5a: $cb $27
-	ld [wC0ED], a                                 ; $0d5c: $ea $ed $c0
-	ld a, [wTileSize]                                 ; $0d5f: $fa $d1 $c0
+	ld [wSpriteFlags], a                          ; $0d5c: $ea $ed $c0
+	ld a, [wTileSize]                             ; $0d5f: $fa $d1 $c0
 	cp $08                                        ; $0d62: $fe $08
-	jr z, jr_000_0d95                             ; $0d64: $28 $2f
+	 jr z, .updateSprite8x8                       ; $0d64: $28 $2f
 
 	ld a, c                                       ; $0d66: $79
 	ld hl, $0da2                                  ; $0d67: $21 $a2 $0d
 	call Call_000_0e7c                            ; $0d6a: $cd $7c $0e
 	ld de, wC002                                  ; de = OAM buffer entry 
-	ld a, [wC133]                                 ; $0d70: $fa $33 $c1
+	ld a, [wCurrentCharacter]                     ; $0d70: $fa $33 $c1
 	cp $02                                        ; $0d73: $fe $02
-	jr nz, jr_000_0d80                            ; $0d75: $20 $09
+	 jr nz, .updateSprite16x16                    ; $0d75: $20 $09
 
 	ld a, [wC137]                                 ; $0d77: $fa $37 $c1
 	add e                                         ; $0d7a: $83
@@ -2095,35 +2094,33 @@ jr_000_0d57::
 	adc $00                                       ; $0d7d: $ce $00
 	ld d, a                                       ; $0d7f: $57
 
-jr_000_0d80::
+; de = Tile ID address in OAM buffer
+.updateSprite16x16::
 	ld b, $04                                     ; Sprite size (4 8x8 sprites/OAM entries)
-
-jr_000_0d82::
+.loop::
 	ld a, [hl+]                                   ; $0d82: $2a
 	ld c, a                                       ; $0d83: $4f
 	ld a, [wC0E4]                                 ; $0d84: $fa $e4 $c0
 	add c                                         ; $0d87: $81
-	ld [de], a                                    ; Y position
+	ld [de], a                                    ; Store tile number
 	inc de                                        ; 
-	ld a, [wC0ED]                                 ; 
-	ld [de], a                                    ; X position
-	inc de                                        ; .. Tile number
-	inc de                                        ; .. Flags
-	inc de                                        ; .. Next OAM entry
+	ld a, [wSpriteFlags]                          ; 
+	ld [de], a                                    ; Store flags
+	inc de                                        ; .. Next OAM entry (Y)
+	inc de                                        ; .. Next OAM entry (X)
+	inc de                                        ; .. Next OAM entry (Tile ID)
 	dec b                                         ; 
-	 jr nz, jr_000_0d82                           ; Repeat 4 times
-
+	 jr nz, .loop                                 ; Repeat 4 times
 	ret                                           ; $0d94: $c9
 
-
-jr_000_0d95::
+.updateSprite8x8::
 	ld a, [wC0E4]                                 ; $0d95: $fa $e4 $c0
 	ld [wC002], a                                 ; $0d98: $ea $02 $c0
-	ld a, [wC0ED]                                 ; $0d9b: $fa $ed $c0
+	ld a, [wSpriteFlags]                                 ; $0d9b: $fa $ed $c0
 	ld [wC003], a                                 ; $0d9e: $ea $03 $c0
 	ret                                           ; $0da1: $c9
 
-
+; Probably data?
 	xor b                                         ; $0da2: $a8
 	dec c                                         ; $0da3: $0d
 	xor h                                         ; $0da4: $ac
@@ -2137,9 +2134,19 @@ jr_000_0d95::
 	ld [bc], a                                    ; $0db0: $02
 	inc bc                                        ; $0db1: $03
 	nop                                           ; $0db2: $00
-	ld bc, $9080                                  ; $0db3: $01 $80 $90
-	or b                                          ; $0db6: $b0
-	or h                                          ; $0db7: $b4
+	db $01
+
+WalkingSpriteId16:: ; $0db4 - Starting ID of walking sprite in tile memory
+	db $80
+
+PushingSpriteId16:: ; $0db5 - Starting ID of pushing sprite in tile memory
+	db $90
+
+WalkingSpriteId8:: ; $0db6 - Same as above for 8x8 sprite size
+	db $B0
+
+PushingSpriteId8:: ; $0db7
+	db $B4
 
 Call_000_0db8::
 	ld a, [wC0E8]                                 ; $0db8: $fa $e8 $c0
@@ -2285,13 +2292,13 @@ Call_000_0e7c::
 	ld e, a                                       ; $0e7e: $5f
 	ld d, $00                                     ; $0e7f: $16 $00
 	add hl, de                                    ; $0e81: $19
-	ld a, [hl+]                                   ; $0e82: $2a
-	ld e, a                                       ; $0e83: $5f
-	ld a, [hl]                                    ; $0e84: $7e
-	ld d, a                                       ; $0e85: $57
-	push de                                       ; $0e86: $d5
-	pop hl                                        ; $0e87: $e1
-	ret                                           ; $0e88: $c9
+	ld a, [hl+]                                   ; ld de, [hl]
+	ld e, a                                       ; 
+	ld a, [hl]                                    ; 
+	ld d, a                                       ; 
+	push de                                       ; ld hl, de
+	pop hl                                        ; 
+	ret                                           ; 
 
 
 	dec sp                                        ; $0e89: $3b
@@ -2372,7 +2379,7 @@ Call_000_0eea::
 	ld [wC103], a                                 ; $0f03: $ea $03 $c1
 
 jr_000_0f06::
-	ld a, [wC0D0]                                 ; $0f06: $fa $d0 $c0
+	ld a, [wDirection]                                 ; $0f06: $fa $d0 $c0
 	ld b, a                                       ; $0f09: $47
 	ld a, [wC107]                                 ; $0f0a: $fa $07 $c1
 	ld [wC0A5], a                                 ; $0f0d: $ea $a5 $c0
@@ -2453,7 +2460,7 @@ jr_000_0f7d::
 	rl b                                          ; $0f86: $cb $10
 	ld [wC108], a                                 ; $0f88: $ea $08 $c1
 	ld a, b                                       ; $0f8b: $78
-	ld [wC0D0], a                                 ; $0f8c: $ea $d0 $c0
+	ld [wDirection], a                                 ; $0f8c: $ea $d0 $c0
 	ld a, [wC104]                                 ; $0f8f: $fa $04 $c1
 	inc a                                         ; $0f92: $3c
 	ld [wC104], a                                 ; $0f93: $ea $04 $c1
@@ -2638,17 +2645,17 @@ jr_000_10be::
 
 
 Call_000_10c8::
-	ld hl, WORK_RAM                                  ; $10c8: $21 $00 $c0
+	ld hl, WORK_RAM                               ; $10c8: $21 $00 $c0
 	ld a, [wGameplayType]                         ; $10cb: $fa $ec $c2
-	cp G_EDITOR                                        ; $10ce: $fe $02
+	cp G_EDITOR                                   ; $10ce: $fe $02
 	jr nz, jr_000_10d5                            ; $10d0: $20 $03
 
 	ld hl, wC020                                  ; $10d2: $21 $20 $c0
 
 jr_000_10d5::
-	ld a, [wTileSize]                                 ; $10d5: $fa $d1 $c0
+	ld a, [wTileSize]                             ; $10d5: $fa $d1 $c0
 	ld b, a                                       ; $10d8: $47
-	ld a, [wC0D0]                                 ; $10d9: $fa $d0 $c0
+	ld a, [wDirection]                            ; $10d9: $fa $d0 $c0
 	cp $02                                        ; $10dc: $fe $02
 	jr c, jr_000_10f4                             ; $10de: $38 $14
 
@@ -2785,7 +2792,8 @@ jr_000_118b::
 jr_000_1195::
 	jp Call_000_049e                              ; $1195: $c3 $9e $04
 
-
+; Something related to editor, called after finishing the editor, perhaps counts
+; the number of boxes vs little squares to make sure they match?
 Call_000_1198::
 	ld b, $02                                     ; $1198: $06 $02
 	xor a                                         ; $119a: $af
@@ -2860,7 +2868,7 @@ Call_000_11f2::
 
 jr_000_11ff::
 	ld a, [wC0A1]                                 ; $11ff: $fa $a1 $c0
-	call StoreAtoHLDE                            ; $1202: $cd $69 $21
+	call StoreAtoHLDE                             ; $1202: $cd $69 $21
 	ld a, [wC2D0]                                 ; $1205: $fa $d0 $c2
 	add l                                         ; $1208: $85
 	ld l, a                                       ; $1209: $6f
@@ -2868,8 +2876,7 @@ jr_000_11ff::
 	adc h                                         ; $120d: $8c
 	ld h, a                                       ; $120e: $67
 	dec b                                         ; $120f: $05
-	jr nz, jr_000_11ff                            ; $1210: $20 $ed
-
+	 jr nz, jr_000_11ff                           ; $1210: $20 $ed
 	ret                                           ; $1212: $c9
 
 
@@ -3030,8 +3037,8 @@ Call_000_12ce::
 
 Call_000_12db::
 	ld a, [wGameplayType]                         ; $12db: $fa $ec $c2
-	cp G_EDITOR                                        ; $12de: $fe $02
-	ret nz                                        ; $12e0: $c0
+	cp G_EDITOR                                   ; $12de: $fe $02
+	 ret nz                                       ; $12e0: $c0
 
 	ld hl, wC023                                  ; $12e1: $21 $23 $c0
 	xor a                                         ; $12e4: $af
@@ -3614,7 +3621,7 @@ Jump_000_1604::
 	dec a                                         ; $1614: $3d
 	rst $38                                       ; $1615: $ff
 
-Call_000_1616::
+RunSampleGameplay::
 	ld a, [wC0CF]                                 ; $1616: $fa $cf $c0
 	and a                                         ; $1619: $a7
 	jr nz, jr_000_165c                            ; $161a: $20 $40
@@ -3669,7 +3676,7 @@ jr_000_164c::
 jr_000_165c::
 	jp Jump_000_0340                              ; $165c: $c3 $40 $03
 
-
+; Run when trying to move after restarting a level
 jr_000_165f::
 	xor a                                         ; $165f: $af
 	ld [wGameplayType], a                         ; $1660: $ea $ec $c2
@@ -4628,7 +4635,7 @@ jr_000_1c1f::
 	ld [wC0FC], a                                 ; $1c1f: $ea $fc $c0
 	xor a                                         ; $1c22: $af
 	ld [wC0FE], a                                 ; $1c23: $ea $fe $c0
-	ld [wC0F9], a                                 ; $1c26: $ea $f9 $c0
+	ld [wMenuOffset], a                                 ; $1c26: $ea $f9 $c0
 	ld [wC0EE], a                                 ; $1c29: $ea $ee $c0
 	ld a, [wTileSize]                                 ; $1c2c: $fa $d1 $c0
 	ld [wC0FB], a                                 ; $1c2f: $ea $fb $c0
@@ -4650,10 +4657,11 @@ jr_000_1c3d::
 	ld [wC132], a                                 ; $1c53: $ea $32 $c1
 	jr nz, jr_000_1c3d                            ; $1c56: $20 $e5
 
-Jump_000_1c58::
-	ld a, [wC0F9]                                 ; $1c58: $fa $f9 $c0
-	cp $03                                        ; $1c5b: $fe $03
-	jr z, jr_000_1c9c                             ; $1c5d: $28 $3d
+; Related to menus
+DrawMenuText::
+	ld a, [wMenuOffset]                           ; A = the index of the line in the menu that is being drawn
+	cp $03                                        ; Max 3 lines of text in a menu
+	 jr z, jr_000_1c9c                            ; $1c5d: $28 $3d
 
 	ld hl, TextSpacesShort                        ; $1c5f: $21 $50 $78
 	call CopyTilesToVRAM                          ; $1c62: $cd $0a $1f
@@ -4663,17 +4671,17 @@ Jump_000_1c58::
 	swap a                                        ; $1c6d: $cb $37
 	dec a                                         ; $1c6f: $3d
 	call Call_000_0e7c                            ; $1c70: $cd $7c $0e
-	ld a, [wC0F9]                                 ; $1c73: $fa $f9 $c0
+	ld a, [wMenuOffset]                           ; $1c73: $fa $f9 $c0
 	call Call_000_0e7c                            ; $1c76: $cd $7c $0e
-	call CopyTilesToVRAM                            ; $1c79: $cd $0a $1f
-	ld a, [wC0F9]                                 ; $1c7c: $fa $f9 $c0
+	call CopyTilesToVRAM                          ; $1c79: $cd $0a $1f
+	ld a, [wMenuOffset]                           ; $1c7c: $fa $f9 $c0
 	ld hl, $1c92                                  ; $1c7f: $21 $92 $1c
 	call Call_000_0e7c                            ; $1c82: $cd $7c $0e
-	call Call_000_1ef9                                    ; $1c85: $cd $f9 $1e
-	ld a, [wC0F9]                                 ; $1c88: $fa $f9 $c0
+	call Call_000_1ef9                            ; $1c85: $cd $f9 $1e
+	ld a, [wMenuOffset]                           ; $1c88: $fa $f9 $c0
 	inc a                                         ; $1c8b: $3c
-	ld [wC0F9], a                                 ; $1c8c: $ea $f9 $c0
-	jp Jump_000_1c58                              ; $1c8f: $c3 $58 $1c
+	ld [wMenuOffset], a                           ; $1c8c: $ea $f9 $c0
+	jp DrawMenuText                               ; $1c8f: $c3 $58 $1c
 
 
 	db $42,$9C,$A3,$9C,$E3,$9C,$02,$9D,$22,$9D	  ; $1c92
@@ -4687,7 +4695,7 @@ jr_000_1c9c::
 	cp $40                                        ; $1ca6: $fe $40
 	jr z, jr_000_1cae                             ; $1ca8: $28 $04
 
-	cp $30                                        ; $1caa: $fe $30
+	cp G_START_MENU                               ; $1caa: $fe $30
 	jr nz, jr_000_1cf9                            ; $1cac: $20 $4b
 
 jr_000_1cae::
@@ -4826,7 +4834,7 @@ Jump_000_1d98::
 	or $02                                        ; $1d9d: $f6 $02
 	ldh [rLCDC], a                                ; $1d9f: $e0 $40
 	xor a                                         ; $1da1: $af
-	ld [wC0F9], a                                 ; $1da2: $ea $f9 $c0
+	ld [wMenuOffset], a                                 ; $1da2: $ea $f9 $c0
 	ld [wC0FA], a                                 ; $1da5: $ea $fa $c0
 	ld [wTimerSeconds], a                                 ; $1da8: $ea $f2 $c0
 	ld a, $08                                     ; $1dab: $3e $08
@@ -5123,9 +5131,9 @@ jr_000_1f63::
 
 Call_000_1f7e::
 	ld a, [wC2D7]                                 ; $1f7e: $fa $d7 $c2
-	ld [wC0A1], a                                 ; $1f81: $ea $a1 $c0
+	ld [wMoveCountL], a                           ; $1f81: $ea $a1 $c0
 	ld a, [wC2D8]                                 ; $1f84: $fa $d8 $c2
-	ld [wC0A2], a                                 ; $1f87: $ea $a2 $c0
+	ld [wMoveCountH], a                           ; $1f87: $ea $a2 $c0
 	call Call_000_203a                            ; $1f8a: $cd $3a $20
 	ld a, $88                                     ; $1f8d: $3e $88
 	ld [wC2DB], a                                 ; $1f8f: $ea $db $c2
@@ -5227,9 +5235,9 @@ jr_000_2022::
 
 
 Call_000_203a::
-	ld a, [wC0A1]                                 ; $203a: $fa $a1 $c0
+	ld a, [wMoveCountL]                                 ; $203a: $fa $a1 $c0
 	ld l, a                                       ; $203d: $6f
-	ld a, [wC0A2]                                 ; $203e: $fa $a2 $c0
+	ld a, [wMoveCountH]                                 ; $203e: $fa $a2 $c0
 	ld h, a                                       ; $2041: $67
 	ld e, $00                                     ; $2042: $1e $00
 	ld bc, jr_000_2710                            ; $2044: $01 $10 $27
@@ -6348,7 +6356,7 @@ jr_000_25d8::
 
 	ret                                           ; $25de: $c9
 
-
+; Probably data
 	nop                                           ; $25df: $00
 	inc l                                         ; $25e0: $2c
 	nop                                           ; $25e1: $00
@@ -6821,18 +6829,18 @@ jr_000_2821::
 
 
 PlayGameIntro::
-	ld a, [wAnimationStarted]                     ; Check if the animation has been initialized/started
+	ld a, [wAnimationStarted]                     ; Check if the cutscene has been initialized/started
 	and a                                         ; 0 = it's uninitialized
-	 jp nz, Jump_000_2903                         ; $282c: $c2 $03 $29
+	 jp nz, AnimateGameIntro                      ; Play animation if it's already been initialized
 
 	ld a, [wC120]                                 ; $282f: $fa $20 $c1
 	ld e, a                                       ; $2832: $5f
-	ld hl, $78d3                                  ; $2833: $21 $d3 $78
+	ld hl, $78d3                                  ; UnknownData1 [bank1-text.asm]
 	call AddHLEtoA                            ; $2836: $cd $6e $21
 	ld [wC138], a                                 ; $2839: $ea $38 $c1
 	ld a, [wC138]                                 ; $283c: $fa $38 $c1
 	ld e, a                                       ; $283f: $5f
-	ld hl, $78df                                  ; $2840: $21 $df $78
+	ld hl, $78df                                  ; UnknownData2 [bank1-text.asm]
 	call AddHLEtoA                            ; $2843: $cd $6e $21
 	ld [wC139], a                                 ; $2846: $ea $39 $c1
 	ld a, [wC138]                                 ; $2849: $fa $38 $c1
@@ -6941,7 +6949,7 @@ jr_000_28e7::
 	ld a, $09                                     ; $28fe: $3e $09
 	ld [wC384], a                                 ; $2900: $ea $84 $c3
 
-Jump_000_2903::
+AnimateGameIntro::
 	ld a, [wFrameCounter]                         ; Update animation every other frame
 	and $01                                       ; 
 	 ret nz                                       ; 
@@ -6967,7 +6975,7 @@ Jump_000_2903::
 
 jr_000_292a::
 	ld a, $01                                     ; $292a: $3e $01
-	ld [wC133], a                                 ; $292c: $ea $33 $c1
+	ld [wCurrentCharacter], a                     ; $292c: $ea $33 $c1
 	ld a, [wC120]                                 ; $292f: $fa $20 $c1
 	cp $0b                                        ; $2932: $fe $0b
 	jr nz, jr_000_293b                            ; $2934: $20 $05
@@ -6990,7 +6998,7 @@ jr_000_2948::
 	jr z, jr_000_29a0                             ; $294d: $28 $51
 
 	ld a, $02                                     ; $294f: $3e $02
-	ld [wC133], a                                 ; $2951: $ea $33 $c1
+	ld [wCurrentCharacter], a                     ; $2951: $ea $33 $c1
 	ld a, [wC138]                                 ; $2954: $fa $38 $c1
 	cp $03                                        ; $2957: $fe $03
 	jr z, jr_000_296b                             ; $2959: $28 $10
@@ -7008,7 +7016,7 @@ jr_000_296b::
 	ld a, $d0                                     ; $296b: $3e $d0
 
 jr_000_296d::
-	ld [wC136], a                                 ; $296d: $ea $36 $c1
+	ld [wCharacter2TileId], a                     ; $296d: $ea $36 $c1
 	ld a, [wC139]                                 ; $2970: $fa $39 $c1
 	ld hl, $7865                                  ; $2973: $21 $65 $78
 	call Call_000_0e7c                            ; $2976: $cd $7c $0e
@@ -7347,7 +7355,7 @@ Call_000_2be3::
 	cp $fe                                        ; $2bed: $fe $fe
 	jr z, jr_000_2bf8                             ; $2bef: $28 $07
 
-	ld [wC0D0], a                                 ; $2bf1: $ea $d0 $c0
+	ld [wDirection], a                                 ; $2bf1: $ea $d0 $c0
 	call Call_000_0800                            ; $2bf4: $cd $00 $08
 	ret                                           ; $2bf7: $c9
 
