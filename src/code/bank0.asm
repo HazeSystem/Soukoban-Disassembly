@@ -62,15 +62,15 @@ PrepareGame::
 	call CopyData                                 ; $01cd: $cd $5b $21
 	
 	ld a, [wGameplayType]                         ; $01d0: $fa $ec $c2
-	cp $04                                        ; $01d3: $fe $04
-	 jr nz, jr_000_01e3                           ; $01d5: $20 $0c
+	cp G_TITLE                                    ; $01d3: $fe $04
+	 jr nz, .skip                           ; $01d5: $20 $0c
 
 	ld hl, $6d55                                  ; $01d7: $21 $55 $6d
 	ld de, $8800                                  ; Second Tile Pattern Table in VRAM ($8800 - $97FF)
 	ld bc, $0530                                  ; $01dd: $01 $30 $05
 	call CopyData                                 ; $01e0: $cd $5b $21
 
-jr_000_01e3::
+.skip::
 	call Call_000_2c8a                            ; $01e3: $cd $8a $2c
 	call ClearBGMap                            ; $01e6: $cd $4c $21
 	ld b, $a0                                     ; $01e9: $06 $a0
@@ -96,12 +96,12 @@ jr_000_01e3::
 	call Jump_000_0ab1                            ; $020e: $cd $b1 $0a
 	call Call_000_1f34                            ; $0211: $cd $34 $1f
 	call Call_000_1b56                            ; $0214: $cd $56 $1b
-	ld a, $c3                                     ; $0217: $3e $c3
-	ldh [rLCDC], a                                ; $0219: $e0 $40
-	ld a, $05                                     ; $021b: $3e $05
-	ldh [rIE], a                                  ; $021d: $e0 $ff
-	ldh [$93], a                                  ; $021f: $e0 $93
-	ei                                            ; $0221: $fb
+	ld a, LCDCF_ON + LCDCF_WIN9C00 + LCDCF_OBJON + LCDCF_BGON   ; Set LCD flags
+	ldh [rLCDC], a                                ;
+	ld a, IEF_TIMER + IEF_VBLANK                   ; Enable LCD and serial interrupts
+	ldh [rIE], a                                  ;
+	ldh [$93], a                                  ; Backup of enabled interrupts?
+	ei                                            ; Enable interrupts
 
 GameLoop::
 	ld a, [wFrameCounter]                                 ; A counter
@@ -3167,8 +3167,7 @@ DrawTitleScreen::
 	ld [wC0A1], a                                 ; $13a6: $ea $a1 $c0
 	ld [wC0F3], a                                 ; $13a9: $ea $f3 $c0
 	ld hl, $4121                                  ; $13ac: $21 $21 $41
-
-DrawTitleScreen.loop::
+.loop::
 	ld de, wVRAMBuffer                            ; $13af: $11 $ad $c0
 	ld c, $0d                                     ; $13b2: $0e $0d
 	ld b, $00                                     ; $13b4: $06 $00
@@ -3190,7 +3189,7 @@ DrawTitleScreen.loop::
 	 ret z                                        ; $13d8: $c8
 
 	ld [wC0A1], a                                 ; $13d9: $ea $a1 $c0
-	jr DrawTitleScreen.loop                       ; $13dc: $18 $d1
+	jr .loop                       ; $13dc: $18 $d1
 
 Call_000_13de::
 	ld a, [wHasWon]                               ; Check if player has beaten the game or not
