@@ -3198,7 +3198,7 @@ Call_000_13de::
 	 ret z                                        ; 
 
 	ld a, [wFrameCounter]                         ; Add a delay
-	and $0                                        ; Only update every other frame
+	and $01                                       ; Only update every other frame
 	 ret nz                                       ; 
 
 	xor a                                         ; $13e9: $af
