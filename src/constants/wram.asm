@@ -132,6 +132,8 @@ wC032:: ; C032
 	ds 1
 wC033:: ; C033
 	ds 1
+
+; wOAM13
 wC034:: ; C034
 	ds 1
 wC035:: ; C035
@@ -140,6 +142,8 @@ wC036:: ; C036
 	ds 1
 wC037:: ; C037
 	ds 1
+
+; wOAM14
 wC038:: ; C038
 	ds 1
 wC039:: ; C039
@@ -148,6 +152,8 @@ wC03A:: ; C03A
 	ds 1
 wC03B:: ; C03B
 	ds 1
+
+; wOAM15
 wC03C:: ; C03C
 	ds 1
 wC03D:: ; C03D
@@ -156,6 +162,8 @@ wC03E:: ; C03E
 	ds 1
 wC03F:: ; C03F
 	ds 1
+
+; wOAM16
 wC040:: ; C040
 	ds 1
 wC041:: ; C041
@@ -164,6 +172,8 @@ wC042:: ; C042
 	ds 1
 wC043:: ; C043
 	ds 1
+
+; wOAM17
 wC044:: ; C044
 	ds 1
 wC045:: ; C045
@@ -172,6 +182,8 @@ wC046:: ; C046
 	ds 1
 wC047:: ; C047
 	ds 1
+
+; wOAM18
 wC048:: ; C048
 	ds 1
 wC049:: ; C049
@@ -180,6 +192,8 @@ wC04A:: ; C04A
 	ds 1
 wC04B:: ; C04B
 	ds 1
+
+; wOAM19
 wC04C:: ; C04C
 	ds 1
 wC04D:: ; C04D
@@ -188,6 +202,8 @@ wC04E:: ; C04E
 	ds 1
 wC04F:: ; C04F
 	ds 1
+
+; wOAM20
 wC050:: ; C050
 	ds 1
 wC051:: ; C051
@@ -196,6 +212,8 @@ wC052:: ; C052
 	ds 1
 wC053:: ; C053
 	ds 1
+
+; wOAM21
 wC054:: ; C054
 	ds 1
 wC055:: ; C055
@@ -204,6 +222,8 @@ wC056:: ; C056
 	ds 1
 wC057:: ; C057
 	ds 1
+
+; wOAM22
 wC058:: ; C058
 	ds 1
 wC059:: ; C059
@@ -212,6 +232,8 @@ wC05A:: ; C05A
 	ds 1
 wC05B:: ; C05B
 	ds 1
+
+; wOAM23
 wC05C:: ; C05C
 	ds 1
 wC05D:: ; C05D
@@ -220,6 +242,8 @@ wC05E:: ; C05E
 	ds 1
 wC05F:: ; C05F
 	ds 1
+
+; wOAM24
 wC060:: ; C060
 	ds 1
 wC061:: ; C061
@@ -228,6 +252,8 @@ wC062:: ; C062
 	ds 1
 wC063:: ; C063
 	ds 1
+
+; wOAM25
 wC064:: ; C064
 	ds 1
 wC065:: ; C065
@@ -236,6 +262,8 @@ wC066:: ; C066
 	ds 1
 wC067:: ; C067
 	ds 1
+
+; wOAM26
 wC068:: ; C068
 	ds 1
 wC069:: ; C069
@@ -244,6 +272,8 @@ wC06A:: ; C06A
 	ds 1
 wC06B:: ; C06B
 	ds 1
+
+; wOAM27
 wC06C:: ; C06C
 	ds 1
 wC06D:: ; C06D
@@ -252,6 +282,8 @@ wC06E:: ; C06E
 	ds 1
 wC06F:: ; C06F
 	ds 1
+
+; wOAM28
 wC070:: ; C070
 	ds 1
 wC071:: ; C071
@@ -260,6 +292,8 @@ wC072:: ; C072
 	ds 1
 wC073:: ; C073
 	ds 1
+
+; wOAM29
 wC074:: ; C074
 	ds 1
 wC075:: ; C075
@@ -268,6 +302,8 @@ wC076:: ; C076
 	ds 1
 wC077:: ; C077
 	ds 1
+
+; wOAM30
 wC078:: ; C078
 	ds 1
 wC079:: ; C079
@@ -276,6 +312,8 @@ wC07A:: ; C07A
 	ds 1
 wC07B:: ; C07B
 	ds 1
+
+; wOAM31
 wC07C:: ; C07C
 	ds 1
 wC07D:: ; C07D
@@ -284,6 +322,8 @@ wC07E:: ; C07E
 	ds 1
 wC07F:: ; C07F
 	ds 1
+
+; wOAM32
 wC080:: ; C080
 	ds 1
 wC081:: ; C081
@@ -292,6 +332,8 @@ wC082:: ; C082
 	ds 1
 wC083:: ; C083
 	ds 1
+
+; wOAM33
 wC084:: ; C084
 	ds 1
 wC085:: ; C085
@@ -300,6 +342,8 @@ wC086:: ; C086
 	ds 1
 wC087:: ; C087
 	ds 1
+
+; wOAM34
 wC088:: ; C088
 	ds 1
 wC089:: ; C089
@@ -308,6 +352,8 @@ wC08A:: ; C08A
 	ds 1
 wC08B:: ; C08B
 	ds 1
+
+; wOAM35
 wC08C:: ; C08C
 	ds 1
 wC08D:: ; C08D
@@ -316,6 +362,8 @@ wC08E:: ; C08E
 	ds 1
 wC08F:: ; C08F
 	ds 1
+
+; wOAM36
 wC090:: ; C090
 	ds 1
 wC091:: ; C091
@@ -324,6 +372,8 @@ wC092:: ; C092
 	ds 1
 wC093:: ; C093
 	ds 1
+
+; wOAM37
 wC094:: ; C094
 	ds 1
 wC095:: ; C095
@@ -332,6 +382,8 @@ wC096:: ; C096
 	ds 1
 wC097:: ; C097
 	ds 1
+
+; wOAM38
 wC098:: ; C098
 	ds 1
 wC099:: ; C099
@@ -340,6 +392,8 @@ wC09A:: ; C09A
 	ds 1
 wC09B:: ; C09B
 	ds 1
+
+; wOAM39
 wC09C:: ; C09C
 	ds 1
 wC09D:: ; C09D
@@ -615,6 +669,7 @@ wC130:: ; C130
 	ds 1
 wC131:: ; C131
 	ds 1
+wAnimationStarted:: ; Tracks whether initial animation when starting new game has been started
 wC132:: ; C132
 	ds 1
 wC133:: ; C133

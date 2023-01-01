@@ -7,6 +7,7 @@ P1_BUTTON EQU P1F_4 ; A/B/Start/Select
 ; Gameplay modes
 G_EDITOR  EQU $02
 G_TITLE   EQU $04
+G_GAME_INTRO EQU $06
 
 ; Key equates
 K_A       EQU %00000001
