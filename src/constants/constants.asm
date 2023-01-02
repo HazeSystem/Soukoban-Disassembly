@@ -7,6 +7,12 @@ P1_BUTTON EQU P1F_4 ; A/B/Start/Select
 ; Gameplay modes
 G_EDITOR  EQU $02
 G_TITLE   EQU $04
+G_GAME_INTRO EQU $06
+
+; Menus start with the left nibble, which serves as their index in the TextTable [bank1-b.asm]
+G_PLAY_CREATE_MENU EQU $10
+G_NEW_CONTINUE_MENU EQU $20
+G_START_MENU EQU $30
 
 ; Key equates
 K_A       EQU %00000001
