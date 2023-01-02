@@ -1,20 +1,20 @@
 ; 77ad
-Text00::	
+MenuTxt::
 	db $21,$15,$50,$53,$ff										; "めにゅー"
 	
-Text01::	
+CleanWarehousTxt::
 	db $0e,$02,$09,$2c,$05,$0f,$11,$2e,$08,$25,$ff				; "そうこをかたづける"
 	
-Text02::
+CreateWarehouseTxt::
 	db $0e,$02,$09,$2c,$11,$07,$25,$ff							; "そうこをつくる"
-	
-Text03::
+
+WhichOneTxt::
 	db $13,$2e,$52,$10,$15,$0c,$25,$4b,$ff						; "どっちにする?"
 	
-Text04::
+GoToWarehouseTxt::
 	db $0e,$02,$09,$1c,$01,$07,$ff								; "そうこへいく"
 	
-Text05::	
+WarehouseKeyTxt::
 	db $0e,$02,$09,$18,$05,$06,$2e,$ff							; "そうこのかぎ"
 	
 Text06::	
