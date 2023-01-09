@@ -2,7 +2,9 @@ section "WRAM Bank0", wram0[$c000]
 
 wram0Section EQU $C000
 
-wC000:: ; C000
+; OAM buffer = $C000-$C09F
+; wOAM0
+WORK_RAM:: ; C000
 	ds 1
 wC001:: ; C001
 	ds 1
@@ -10,6 +12,8 @@ wC002:: ; C002
 	ds 1
 wC003:: ; C003
 	ds 1
+
+; wOAM1
 wC004:: ; C004
 	ds 1
 wC005:: ; C005
@@ -18,6 +22,8 @@ wC006:: ; C006
 	ds 1
 wC007:: ; C007
 	ds 1
+
+; wOAM2
 wC008:: ; C008
 	ds 1
 wC009:: ; C009
@@ -26,6 +32,8 @@ wC00A:: ; C00A
 	ds 1
 wC00B:: ; C00B
 	ds 1
+
+; wOAM3
 wC00C:: ; C00C
 	ds 1
 wC00D:: ; C00D
@@ -34,6 +42,8 @@ wC00E:: ; C00E
 	ds 1
 wC00F:: ; C00F
 	ds 1
+
+; wOAM4
 wC010:: ; C010
 	ds 1
 wC011:: ; C011
@@ -42,6 +52,8 @@ wC012:: ; C012
 	ds 1
 wC013:: ; C013
 	ds 1
+
+; wOAM5
 wC014:: ; C014
 	ds 1
 wC015:: ; C015
@@ -50,6 +62,8 @@ wC016:: ; C016
 	ds 1
 wC017:: ; C017
 	ds 1
+
+; wOAM6
 wC018:: ; C018
 	ds 1
 wC019:: ; C019
@@ -58,6 +72,8 @@ wC01A:: ; C01A
 	ds 1
 wC01B:: ; C01B
 	ds 1
+
+; wOAM7
 wC01C:: ; C01C
 	ds 1
 wC01D:: ; C01D
@@ -66,6 +82,8 @@ wC01E:: ; C01E
 	ds 1
 wC01F:: ; C01F
 	ds 1
+
+; wOAM8
 wC020:: ; C020
 	ds 1
 wC021:: ; C021
@@ -74,6 +92,8 @@ wC022:: ; C022
 	ds 1
 wC023:: ; C023
 	ds 1
+
+; wOAM9
 wC024:: ; C024
 	ds 1
 wC025:: ; C025
@@ -82,6 +102,8 @@ wC026:: ; C026
 	ds 1
 wC027:: ; C027
 	ds 1
+
+; wOAM10
 wC028:: ; C028
 	ds 1
 wC029:: ; C029
@@ -90,6 +112,8 @@ wC02A:: ; C02A
 	ds 1
 wC02B:: ; C02B
 	ds 1
+
+; wOAM11
 wC02C:: ; C02C
 	ds 1
 wC02D:: ; C02D
@@ -98,6 +122,8 @@ wC02E:: ; C02E
 	ds 1
 wC02F:: ; C02F
 	ds 1
+
+; wOAM12
 wC030:: ; C030
 	ds 1
 wC031:: ; C031
@@ -106,6 +132,8 @@ wC032:: ; C032
 	ds 1
 wC033:: ; C033
 	ds 1
+
+; wOAM13
 wC034:: ; C034
 	ds 1
 wC035:: ; C035
@@ -114,6 +142,8 @@ wC036:: ; C036
 	ds 1
 wC037:: ; C037
 	ds 1
+
+; wOAM14
 wC038:: ; C038
 	ds 1
 wC039:: ; C039
@@ -122,6 +152,8 @@ wC03A:: ; C03A
 	ds 1
 wC03B:: ; C03B
 	ds 1
+
+; wOAM15
 wC03C:: ; C03C
 	ds 1
 wC03D:: ; C03D
@@ -130,6 +162,8 @@ wC03E:: ; C03E
 	ds 1
 wC03F:: ; C03F
 	ds 1
+
+; wOAM16
 wC040:: ; C040
 	ds 1
 wC041:: ; C041
@@ -138,6 +172,8 @@ wC042:: ; C042
 	ds 1
 wC043:: ; C043
 	ds 1
+
+; wOAM17
 wC044:: ; C044
 	ds 1
 wC045:: ; C045
@@ -146,6 +182,8 @@ wC046:: ; C046
 	ds 1
 wC047:: ; C047
 	ds 1
+
+; wOAM18
 wC048:: ; C048
 	ds 1
 wC049:: ; C049
@@ -154,6 +192,8 @@ wC04A:: ; C04A
 	ds 1
 wC04B:: ; C04B
 	ds 1
+
+; wOAM19
 wC04C:: ; C04C
 	ds 1
 wC04D:: ; C04D
@@ -162,6 +202,8 @@ wC04E:: ; C04E
 	ds 1
 wC04F:: ; C04F
 	ds 1
+
+; wOAM20
 wC050:: ; C050
 	ds 1
 wC051:: ; C051
@@ -170,6 +212,8 @@ wC052:: ; C052
 	ds 1
 wC053:: ; C053
 	ds 1
+
+; wOAM21
 wC054:: ; C054
 	ds 1
 wC055:: ; C055
@@ -178,6 +222,8 @@ wC056:: ; C056
 	ds 1
 wC057:: ; C057
 	ds 1
+
+; wOAM22
 wC058:: ; C058
 	ds 1
 wC059:: ; C059
@@ -186,6 +232,8 @@ wC05A:: ; C05A
 	ds 1
 wC05B:: ; C05B
 	ds 1
+
+; wOAM23
 wC05C:: ; C05C
 	ds 1
 wC05D:: ; C05D
@@ -194,6 +242,8 @@ wC05E:: ; C05E
 	ds 1
 wC05F:: ; C05F
 	ds 1
+
+; wOAM24
 wC060:: ; C060
 	ds 1
 wC061:: ; C061
@@ -202,6 +252,8 @@ wC062:: ; C062
 	ds 1
 wC063:: ; C063
 	ds 1
+
+; wOAM25
 wC064:: ; C064
 	ds 1
 wC065:: ; C065
@@ -210,6 +262,8 @@ wC066:: ; C066
 	ds 1
 wC067:: ; C067
 	ds 1
+
+; wOAM26
 wC068:: ; C068
 	ds 1
 wC069:: ; C069
@@ -218,6 +272,8 @@ wC06A:: ; C06A
 	ds 1
 wC06B:: ; C06B
 	ds 1
+
+; wOAM27
 wC06C:: ; C06C
 	ds 1
 wC06D:: ; C06D
@@ -226,6 +282,8 @@ wC06E:: ; C06E
 	ds 1
 wC06F:: ; C06F
 	ds 1
+
+; wOAM28
 wC070:: ; C070
 	ds 1
 wC071:: ; C071
@@ -234,6 +292,8 @@ wC072:: ; C072
 	ds 1
 wC073:: ; C073
 	ds 1
+
+; wOAM29
 wC074:: ; C074
 	ds 1
 wC075:: ; C075
@@ -242,6 +302,8 @@ wC076:: ; C076
 	ds 1
 wC077:: ; C077
 	ds 1
+
+; wOAM30
 wC078:: ; C078
 	ds 1
 wC079:: ; C079
@@ -250,6 +312,8 @@ wC07A:: ; C07A
 	ds 1
 wC07B:: ; C07B
 	ds 1
+
+; wOAM31
 wC07C:: ; C07C
 	ds 1
 wC07D:: ; C07D
@@ -258,6 +322,8 @@ wC07E:: ; C07E
 	ds 1
 wC07F:: ; C07F
 	ds 1
+
+; wOAM32
 wC080:: ; C080
 	ds 1
 wC081:: ; C081
@@ -266,6 +332,8 @@ wC082:: ; C082
 	ds 1
 wC083:: ; C083
 	ds 1
+
+; wOAM33
 wC084:: ; C084
 	ds 1
 wC085:: ; C085
@@ -274,6 +342,8 @@ wC086:: ; C086
 	ds 1
 wC087:: ; C087
 	ds 1
+
+; wOAM34
 wC088:: ; C088
 	ds 1
 wC089:: ; C089
@@ -282,6 +352,8 @@ wC08A:: ; C08A
 	ds 1
 wC08B:: ; C08B
 	ds 1
+
+; wOAM35
 wC08C:: ; C08C
 	ds 1
 wC08D:: ; C08D
@@ -290,6 +362,8 @@ wC08E:: ; C08E
 	ds 1
 wC08F:: ; C08F
 	ds 1
+
+; wOAM36
 wC090:: ; C090
 	ds 1
 wC091:: ; C091
@@ -298,6 +372,8 @@ wC092:: ; C092
 	ds 1
 wC093:: ; C093
 	ds 1
+
+; wOAM37
 wC094:: ; C094
 	ds 1
 wC095:: ; C095
@@ -306,6 +382,8 @@ wC096:: ; C096
 	ds 1
 wC097:: ; C097
 	ds 1
+
+; wOAM38
 wC098:: ; C098
 	ds 1
 wC099:: ; C099
@@ -314,6 +392,8 @@ wC09A:: ; C09A
 	ds 1
 wC09B:: ; C09B
 	ds 1
+
+; wOAM39
 wC09C:: ; C09C
 	ds 1
 wC09D:: ; C09D
@@ -322,15 +402,19 @@ wC09E:: ; C09E
 	ds 1
 wC09F:: ; C09F
 	ds 1
+
+; Start of non-OAM data
 wC0A0:: ; C0A0
 	ds 1
+wMoveCountL:: ; Move count takes up 2 bytes
 wC0A1:: ; C0A1
 	ds 1
+wMoveCountH:: ; High byte of move count
 wC0A2:: ; C0A2
 	ds 1
-wC0A3:: ; C0A3
+wHasWon:: ; C0A3 - any value > 0 means player has "beaten" the game (or input the secret keypress at the title screen)
 	ds 1
-wC0A4:: ; C0A4
+wFrameCounter:: ; C0A4 - incremented each frame in the main game loop
 	ds 1
 wC0A5:: ; C0A5
 	ds 1
@@ -392,12 +476,13 @@ wC0CE:: ; C0CE
 	ds 1
 wC0CF:: ; C0CF
 	ds 1
-wC0D0:: ; C0D0
+wDirection:: ; C0D0 - Direction the player is facing
 	ds 1
-wC0D1:: ; C0D1
+wTileSize:: ; C0D1 - Size of tile to draw, value should be 8 or 16
 	ds 1
 wC0D2:: ; C0D2
 	ds 1
+wCurBlock:: ; Currently selected block in the editor
 wC0D3:: ; C0D3
 	ds 1
 wC0D4:: ; C0D4
@@ -448,17 +533,17 @@ wC0EB:: ; C0EB
 	ds 1
 wC0EC:: ; C0EC
 	ds 1
-wC0ED:: ; C0ED
+wSpriteFlags:: ; C0ED - OAM flags (e.g x flip)
 	ds 1
 wC0EE:: ; C0EE
 	ds 1
-wC0EF:: ; C0EF
+wTimerFrames:: ; C0EF
 	ds 1
 wC0F0:: ; C0F0
 	ds 1
 wC0F1:: ; C0F1
 	ds 1
-wC0F2:: ; C0F2
+wTimerSeconds:: ; C0F2 - Approximate Number of seconds passed
 	ds 1
 wC0F3:: ; C0F3
 	ds 1
@@ -472,7 +557,7 @@ wVRAMPointerHigh:: ; C0F7
 	ds 1
 wVRAMPointerLow:: ; C0F8
 	ds 1
-wC0F9:: ; C0F9
+wMenuOffset:: ; C0F9 - which line of the menu to draw
 	ds 1
 wC0FA:: ; C0FA
 	ds 1
@@ -480,7 +565,7 @@ wC0FB:: ; C0FB
 	ds 1
 wC0FC:: ; C0FC
 	ds 1
-wC0FD:: ; C0FD
+wKeyState:: ; C0FD - A copy of the pressed keys
 	ds 1
 wC0FE:: ; C0FE
 	ds 1
@@ -586,15 +671,17 @@ wC130:: ; C130
 	ds 1
 wC131:: ; C131
 	ds 1
+wAnimationStarted:: ; Tracks whether initial animation when starting new game has been started
 wC132:: ; C132
 	ds 1
+wCurrentCharacter:: ; Tracks the current character being drawn on screen
 wC133:: ; C133
 	ds 1
 wC134:: ; C134
 	ds 1
 wC135:: ; C135
 	ds 1
-wC136:: ; C136
+wCharacter2TileId:: ; C136 - Used in the intro cutscene for the ponytail character
 	ds 1
 wC137:: ; C137
 	ds 1
@@ -1470,7 +1557,7 @@ wC2EA:: ; C2EA
 	ds 1
 wC2EB:: ; C2EB
 	ds 1
-wGameplayType:: ; C2EC
+wGameplayType:: ; C2EC - $01 = sample play, $04 = title screen
 	ds 1
 wC2ED:: ; C2ED
 	ds 1
