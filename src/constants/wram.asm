@@ -406,6 +406,7 @@ wC09F:: ; C09F
 ; Start of non-OAM data
 wC0A0:: ; C0A0
 	ds 1
+wCounter::
 wMoveCountL:: ; Move count takes up 2 bytes
 wC0A1:: ; C0A1
 	ds 1
@@ -432,7 +433,7 @@ wC0AB:: ; C0AB
 	ds 1
 wC0AC:: ; C0AC
 	ds 1
-wVRAMBuffer:: ; C0AD
+wVRAMBuffer:: ; C0AD - used for text?
 	ds 14
 wC0BB:: ; C0BB
 	ds 1

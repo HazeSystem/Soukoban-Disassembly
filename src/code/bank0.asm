@@ -641,15 +641,15 @@ jr_000_0535::
 	ret                                           ; $053c: $c9
 
 
+; Called in VBlank interrupt
 Call_000_053d::
 	ld a, [wGameplayType]                         ; $053d: $fa $ec $c2
-	and $f0                                       ; $0540: $e6 $f0
-	ret nz                                        ; $0542: $c0
-
-	ld a, [wC0F3]                                 ; $0543: $fa $f3 $c0
-	and a                                         ; $0546: $a7
-	 jr z, DrawTile                               ; $0547: $28 $03
-	jp RenderText                                 ; $0549: $c3 $e1 $1b
+	and $f0                                       ; Check if we're in a menu
+	 ret nz                                       ; Quit if in a menu
+	ld a, [wC0F3]                                 ; If we are in the title screen ($0E) or in the preview ($00)
+	and a                                         ; If 0, go to the DrawTile routine
+	 jr z, DrawTile                               ; Draw a tile
+	jp RenderRow                                  ; Else draw a row
 
 
 ; Copy a 16x16 tile to VRAM
@@ -3169,38 +3169,37 @@ DrawTitleScreen::
 	cp $04                                        ; $1394: $fe $04
 	 ret nz                                       ; $1396: $c0
 
-	call ClearBGMap                            ; $1397: $cd $4c $21
-	ld a, $44                                     ; $139a: $3e $44
-	ld [wVRAMPointerLow], a                                 ; $139c: $ea $f8 $c0
+	call ClearBGMap                               ; Clear background
+	ld a, $44                                     ; Set position in VRAM to draw to
+	ld [wVRAMPointerLow], a                       ; $9844
 	ld a, $98                                     ; $139f: $3e $98
-	ld [wVRAMPointerHigh], a                                 ; $13a1: $ea $f7 $c0
-	ld a, $0e                                     ; $13a4: $3e $0e
-	ld [wC0A1], a                                 ; $13a6: $ea $a1 $c0
-	ld [wC0F3], a                                 ; $13a9: $ea $f3 $c0
-	ld hl, $4121                                  ; $13ac: $21 $21 $41
+	ld [wVRAMPointerHigh], a                      ; VRAM: $9844
+	ld a, 14                                      ; The title image has 14 rows
+	ld [wCounter], a                              ; Save row count into counter variable
+	ld [wC0F3], a                                 ; = 14/$0E when in title screen, 00 when in animation
+	ld hl, TitleSouKoBan                          ; The start of the table of sprites
 .loop::
 	ld de, wVRAMBuffer                            ; $13af: $11 $ad $c0
-	ld c, $0d                                     ; $13b2: $0e $0d
-	ld b, $00                                     ; $13b4: $06 $00
-	call CopyData                              ; $13b6: $cd $5b $21
-	ld a, $ff                                     ; $13b9: $3e $ff
-	ld [wVRAMBuffer+13], a                                 ; $13bb: $ea $ba $c0
-	push hl                                       ; $13be: $e5
-	ld a, [wVRAMPointerLow]                                 ; $13bf: $fa $f8 $c0
-	add $20                                       ; $13c2: $c6 $20
-	ld [wVRAMPointerLow], a                                 ; $13c4: $ea $f8 $c0
-	ld a, [wVRAMPointerHigh]                                 ; $13c7: $fa $f7 $c0
-	adc $00                                       ; $13ca: $ce $00
-	ld [wVRAMPointerHigh], a                                 ; $13cc: $ea $f7 $c0
-	call RenderText                            ; $13cf: $cd $e1 $1b
-	pop hl                                        ; $13d2: $e1
-	ld a, [wC0A1]                                 ; $13d3: $fa $a1 $c0
-	dec a                                         ; $13d6: $3d
-	and a                                         ; $13d7: $a7
-	 ret z                                        ; $13d8: $c8
-
-	ld [wC0A1], a                                 ; $13d9: $ea $a1 $c0
-	jr .loop                       ; $13dc: $18 $d1
+	ld c, 13                                      ; bc = 13
+	ld b, 0                                       ;
+	call CopyData                                 ; Copy first row (13 tiles) into VRAM buffer
+	ld a, $ff                                     ; Add EOL marker
+	ld [wVRAMBuffer+13], a                        ; .. to the end of the buffer
+	push hl                                       ; Save title image pointer
+	    ld a, [wVRAMPointerLow]                   ; Current position in VRAM
+	    add $20                                   ; Move down one row (each row has 32 tiles)
+	    ld [wVRAMPointerLow], a                   ;
+	    ld a, [wVRAMPointerHigh]                  ; Handle carry if low pointer wrapped
+	    adc $00                                   ;
+	    ld [wVRAMPointerHigh], a                  ;
+	    call RenderRow                           ; Copy the buffer to the location in the VRAM pointers above
+	pop hl                                        ; Restore title image pointer
+	ld a, [wCounter]                              ;
+	dec a                                         ; Decrease counter
+	and a                                         ; Check if zero
+	 ret z                                        ; Quit if we've drawn all rows
+	ld [wCounter], a                              ; Else, save counter
+	jr .loop                                      ; And repeat
 
 Call_000_13de::
 	ld a, [wHasWon]                               ; Check if player has beaten the game or not
@@ -4145,7 +4144,7 @@ Jump_000_18cf::
 	ld a, $ff                                     ; $18f2: $3e $ff
 	ld [wGameplayType], a                         ; $18f4: $ea $ec $c2
 	ld hl, $98a2                                  ; $18f7: $21 $a2 $98
-	call Call_000_1ef9                                    ; $18fa: $cd $f9 $1e
+	call CopyBufferToVRAM                                    ; $18fa: $cd $f9 $1e
 	ld a, $05                                     ; $18fd: $3e $05
 	ld [wGameplayType], a                         ; $18ff: $ea $ec $c2
 	jp jr_000_1a64                                ; $1902: $c3 $64 $1a
@@ -4271,11 +4270,11 @@ Jump_000_19c6::
 	ld [wGameplayType], a                         ; $19ce: $ea $ec $c2
 	ld [de], a                                    ; $19d1: $12
 	ld hl, $9865                                  ; $19d2: $21 $65 $98
-	call Call_000_1ef9                                    ; $19d5: $cd $f9 $1e
+	call CopyBufferToVRAM                                    ; $19d5: $cd $f9 $1e
 	ld hl, TextSpacesMed                                  ; $19d8: $21 $4c $78
 	call CopyTilesToVRAM                            ; $19db: $cd $0a $1f
 	ld hl, $98a2                                  ; $19de: $21 $a2 $98
-	call Call_000_1ef9                                    ; $19e1: $cd $f9 $1e
+	call CopyBufferToVRAM                                    ; $19e1: $cd $f9 $1e
 	ld a, $05                                     ; $19e4: $3e $05
 	ld [wGameplayType], a                         ; $19e6: $ea $ec $c2
 	xor a                                         ; $19e9: $af
@@ -4588,9 +4587,10 @@ Call_000_1bdb::
 	and $f0                                       ; $1bde: $e6 $f0
 	ret z                                         ; $1be0: $c8
 
-RenderText::
+; Copies a row from the VRAM buffer to the VRAM address in wVRAMPointerHigh/Low
+RenderRow::
 	ld de, wVRAMBuffer                            ; DE = the source to copy from
-	ld a, [wVRAMPointerHigh]                      ; HL = the location in VRAM to copy to
+	ld a, [wVRAMPointerHigh]                      ; HL = the destination in VRAM to copy to
 	ld h, a                                       ; 
 	ld a, [wVRAMPointerLow]                       ; 
 	ld l, a                                       ; 
@@ -4600,9 +4600,9 @@ RenderText::
 ;  hl = VRAM location
 ;  de = Source
 RenderToVRAM::
-	ld a, [de]                                    ; $1bec: $1a
-	cp $ff                                        ; $1bed: $fe $ff
-	 jr z, .done                                  ; $1bef: $28 $08
+	ld a, [de]                                    ; a = Tile to draw
+	cp $ff                                        ; Check for EOL byte
+	 jr z, .done                                  ; Quit if we've finished drawing the row
 .loopUntilSaved
 	ld [hl], a                                    ; $1bf1: $77
 	cp [hl]                                       ; $1bf2: $be
@@ -4658,7 +4658,7 @@ jr_000_1c3d::
 	ld a, [wC132]                                 ; $1c43: $fa $32 $c1
 	ld hl, MenuVRAMTable                                  ; $1c46: $21 $92 $1c
 	call ExtractAddress                            ; $1c49: $cd $7c $0e
-	call Call_000_1ef9                                    ; $1c4c: $cd $f9 $1e
+	call CopyBufferToVRAM                                    ; $1c4c: $cd $f9 $1e
 	ld a, [wC132]                                 ; $1c4f: $fa $32 $c1
 	dec a                                         ; $1c52: $3d
 	ld [wC132], a                                 ; $1c53: $ea $32 $c1
@@ -4680,11 +4680,11 @@ DrawMenuText::
 	call ExtractAddress                           ; Grab the address of the menu
 	ld a, [wMenuOffset]                           ; A = the menu item we're currently displaying
 	call ExtractAddress                           ; HL = the address of the menu item's string
-	call CopyTilesToVRAM                          ; $1c79: $cd $0a $1f
+	call CopyTilesToVRAM                          ; Put string into VRAM buffer
 	ld a, [wMenuOffset]                           ; $1c7c: $fa $f9 $c0
 	ld hl, MenuVRAMTable                                  ; $1c7f: $21 $92 $1c
 	call ExtractAddress                            ; $1c82: $cd $7c $0e
-	call Call_000_1ef9                            ; $1c85: $cd $f9 $1e
+	call CopyBufferToVRAM                            ; $1c85: $cd $f9 $1e
 	ld a, [wMenuOffset]                           ; $1c88: $fa $f9 $c0
 	inc a                                         ; $1c8b: $3c
 	ld [wMenuOffset], a                           ; $1c8c: $ea $f9 $c0
@@ -4714,7 +4714,7 @@ jr_000_1cae::
 	ld hl, $785c                                  ; $1cae: $21 $5c $78
 	call CopyTilesToVRAM                            ; $1cb1: $cd $0a $1f
 	ld hl, $9d21                                  ; $1cb4: $21 $21 $9d
-	call Call_000_1ef9                                    ; $1cb7: $cd $f9 $1e
+	call CopyBufferToVRAM                                    ; $1cb7: $cd $f9 $1e
 	ld a, [wC120]                                 ; $1cba: $fa $20 $c1
 	ld [wVRAMBuffer], a                                 ; $1cbd: $ea $ad $c0
 	ld a, [wC121]                                 ; $1cc0: $fa $21 $c1
@@ -4727,7 +4727,7 @@ jr_000_1cae::
 	ld a, $ff                                     ; $1cd3: $3e $ff
 	ld [wVRAMBuffer+4], a                                 ; $1cd5: $ea $b1 $c0
 	ld hl, $9d29                                  ; $1cd8: $21 $29 $9d
-	call Call_000_1ef9                                    ; $1cdb: $cd $f9 $1e
+	call CopyBufferToVRAM                                    ; $1cdb: $cd $f9 $1e
 	jr jr_000_1cf9                                ; $1cde: $18 $19
 
 Jump_000_1ce0::
@@ -4740,7 +4740,7 @@ Jump_000_1ce0::
 	ld hl, $7822                                  ; $1ced: $21 $22 $78
 	call CopyTilesToVRAM                            ; $1cf0: $cd $0a $1f
 	ld hl, $9d03                                  ; $1cf3: $21 $03 $9d
-	call Call_000_1ef9                                    ; $1cf6: $cd $f9 $1e
+	call CopyBufferToVRAM                                    ; $1cf6: $cd $f9 $1e
 
 jr_000_1cf9::
 	ld de, $2838                                  ; $1cf9: $11 $38 $28
@@ -5040,8 +5040,9 @@ jr_000_1ed6::
 
 	db $E9,$1E,$B6,$1D,$E7,$1D,$12,$1E			  ; $1ee9: $e9
 	db $28,$1E,$8C,$1E,$A4,$1E,$C1,$1E 
-	
-Call_000_1ef9::
+
+;
+CopyBufferToVRAM::
 	ld a, h										  ; $1ef9: $7c
 	ld [wVRAMPointerHigh], a                                 ; $1efa: $ea $f7 $c0
 	ld a, l                                       ; $1efd: $7d
@@ -5052,6 +5053,9 @@ Call_000_1ef9::
 	ret                                           ; $1f09: $c9
 
 
+; Copies the value in HL to the VRAM buffer until it reaches an $FF byte.
+; Input:
+;  HL = Source
 CopyTilesToVRAM::
 	ld de, wVRAMBuffer                            ; $1f0a: $11 $ad $c0
 CopyTiles::
@@ -5065,14 +5069,15 @@ CopyTiles::
 	ret                                           ; $1f16: $c9
 
 
+; I think this just waits for a VBlank interrupt
 CopyTextToBuffer::
 	ld a, $01                                     ; $1f17: $3e $01
-	ld [wWaitForVBlank], a                                ; $1f19: $ea $f6 $c0
+	ld [wWaitForVBlank], a                        ; $1f19: $ea $f6 $c0
 
 .loop
-	ld a, [wWaitForVBlank]                                 ; $1f1c: $fa $f6 $c0
+	ld a, [wWaitForVBlank]                        ; $1f1c: $fa $f6 $c0
 	and a                                         ; $1f1f: $a7
-	jr nz, .loop	                              ; $1f20: $20 $fa
+	 jr nz, .loop                                 ; $1f20: $20 $fa
 
 	ret                                           ; $1f22: $c9
 
@@ -7346,7 +7351,7 @@ Call_000_2bba::
 	ld hl, $9905                                  ; $2bcf: $21 $05 $99
 	ld a, $f0                                     ; $2bd2: $3e $f0
 	ld [wGameplayType], a                         ; $2bd4: $ea $ec $c2
-	call Call_000_1ef9                                    ; $2bd7: $cd $f9 $1e
+	call CopyBufferToVRAM                                    ; $2bd7: $cd $f9 $1e
 	ld a, $06                                     ; $2bda: $3e $06
 	ld [wGameplayType], a                         ; $2bdc: $ea $ec $c2
 	call Call_000_2c04                            ; $2bdf: $cd $04 $2c
@@ -7506,7 +7511,7 @@ Call_000_2cbd::
 	ld hl, $2dd3                                  ; $2cdb: $21 $d3 $2d
 	call Call_000_149f                            ; $2cde: $cd $9f $14
 	call CopyTiles                              ; $2ce1: $cd $0d $1f
-	call RenderText                            ; $2ce4: $cd $e1 $1b
+	call RenderRow                            ; $2ce4: $cd $e1 $1b
 	ld a, $00                                     ; $2ce7: $3e $00
 	ld [wVRAMPointerLow], a                                 ; $2ce9: $ea $f8 $c0
 	ld a, $99                                     ; $2cec: $3e $99
@@ -7516,7 +7521,7 @@ Call_000_2cbd::
 	ld hl, $2dec                                  ; $2cf7: $21 $ec $2d
 	call Call_000_149f                            ; $2cfa: $cd $9f $14
 	call CopyTiles                              ; $2cfd: $cd $0d $1f
-	call RenderText                            ; $2d00: $cd $e1 $1b
+	call RenderRow                            ; $2d00: $cd $e1 $1b
 	ld hl, wC032                                  ; $2d03: $21 $32 $c0
 	ld a, $d4                                     ; $2d06: $3e $d4
 
